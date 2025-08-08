@@ -1,0 +1,2997 @@
+<script>
+document.addEventListener('DOMContentLoaded', (event) => {
+    try {
+        // Get references to main sections
+        const loginPage = document.getElementById('loginPage');
+        const appContent = document.getElementById('appContent');
+
+        // Login Form Elements
+        const loginForm = document.getElementById('loginForm');
+        const loginEmailInput = document.getElementById('loginEmail');
+        const loginPasswordInput = document.getElementById('loginPassword');
+        const passwordError = document.getElementById('passwordError');
+        const togglePassword = document.getElementById('togglePassword');
+
+        // Sidebar Navigation Elements
+        const navLeaveHistory = document.getElementById('navLeaveHistory');
+        const navEmployeeBalance = document.getElementById('navEmployeeBalance');
+        const navAuditLogs = document.getElementById('navAuditLogs');
+        const navLeaveForm = document.getElementById('navLeaveForm');
+        const navFileUpload = document.getElementById('navFileUpload');
+        const logoutLink = document.getElementById('logoutLink');
+
+        const navForceLeave = document.getElementById('navForceLeave');
+        const forceLeaveCard = document.getElementById('forceLeaveCard');
+        const forceLeaveLink = document.getElementById('forceLeaveLink');
+        const forceLeaveHistoryCard = document.getElementById('forceLeaveHistoryCard');
+
+        // Content Cards
+        const leaveHistoryCard = document.getElementById('leaveHistoryCard');
+        const employeeBalanceCard = document.getElementById('employeeBalanceCard');
+        const auditLogsCard = document.getElementById('auditLogsCard');
+        const leaveFormCard = document.getElementById('leaveFormCard');
+        const mediaUploadCard = document.getElementById('mediaUploadCard');
+
+        // Other elements
+        const stepIndicatorContainer = document.querySelector('.step-indicator-container');
+        const employeeBalanceTopDateDisplayContainer = document.getElementById('employeeBalanceTopDateDisplayContainer');
+        const auditLogsTopDateDisplayContainer = document.getElementById('auditLogsTopDateDisplayContainer');
+        const stepItems = document.querySelectorAll('.step-item');
+        const openModalBtn = document.getElementById('openModalBtn');
+        const submissionModal = document.getElementById('submissionModal');
+        const cancelSubmissionBtn = document.getElementById('cancelSubmission');
+        const confirmSubmissionBtn = document.getElementById('confirmSubmission');
+
+        // Media Upload elements
+        const mediaDropArea = document.getElementById('mediaDropArea');
+        const mediaFileInput = document.getElementById('mediaFileInput');
+        const mediaFileList = document.getElementById('mediaFileList');
+        const mediaUploadCancelBtn = document = document.getElementById('mediaUploadCancel');
+        const mediaUploadBtn = document.getElementById('mediaUploadBtn');
+        const fileNumberInput = document.getElementById('fileNumber'); // Get file number input
+
+        let uploadedMediaFiles = [];
+
+        // Variable to store the current logged-in user's email and role for audit logging
+        let currentUserEmail = '';
+        let currentUserRole = ''; // New variable to store the user's role
+
+        // --- Initial Setup ---
+        // Show login page initially, hide app content
+        if (loginPage) loginPage.style.display = 'flex';
+        if (appContent) appContent.style.display = 'none';
+
+        // Set today's date for the form
+        const today = new Date();
+        const year = today.getFullYear();
+        const month = String(today.getMonth() + 1).padStart(2, '0');
+        const day = String(today.getDate()).padStart(2, '0');
+        const formattedDate = `${month}/${day}/${year}`;
+        const dateInput = document.getElementById('date');
+        if (dateInput) {
+            dateInput.value = formattedDate;
+        }
+
+        // Set today's date for the top display
+        const options = { month: 'long', day: 'numeric', year: 'numeric' };
+        const longFormattedDate = today.toLocaleDateString('en-US', options);
+
+        // Employee Balance Table Logic - Declarations and Functions (Moved to top for scope)
+        const employeeBalanceSearchInput = document.getElementById('employeeBalanceSearchInput');
+        const filterToggleButtonBalance = document.getElementById('filterToggleButtonBalance');
+        const filterOptionsPopoverBalance = document.getElementById('filterOptionsPopoverBalance');
+        const departmentFilterDropdownBalance = document.getElementById('departmentFilterDropdownBalance');
+        const departmentFilterSelectedValueBalance = departmentFilterDropdownBalance ? departmentFilterDropdownBalance.querySelector('.filter-selected-value') : null;
+        const departmentFilterContentBalance = document.getElementById('departmentFilterContentBalance');
+        const departmentFilterOptionsBalance = departmentFilterContentBalance ? departmentFilterContentBalance.querySelectorAll('.filter-option') : [];
+
+        const applyFiltersButtonBalance = document.getElementById('applyFiltersButtonBalance');
+
+        const employeeBalanceTable = document.getElementById('employeeBalanceTable');
+        const employeeBalanceTableBody = employeeBalanceTable ? employeeBalanceTable.querySelector('tbody') : null;
+        const employeeBalanceHeaders = employeeBalanceTable ? employeeBalanceTable.querySelectorAll('th[data-sortable="true"]') : [];
+
+
+        let masterEmployeeBalanceData = [];
+        let currentEmployeeBalanceFilters = {
+            department: '',
+            searchTerm: ''
+        };
+        let currentEmployeeBalanceSort = {
+            column: null,
+            direction: 'asc'
+        };
+
+        // Helper function to create a table row element from data for Employee Balance
+        function createEmployeeBalanceRowElement(data) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>
+                    <div class="name-cell">
+                        <span>${data.name}</span>
+                    </div>
+                </td>
+                <td>${data.department}</td>
+                <td>${data.sickLeave}</td>
+                <td>${data.vacationLeave}</td>
+                <td>${data.maternityPaternity}</td>
+                <td>${data.emergencyLeave}</td>
+                <td>${data.birthdayLeave}</td>
+                <td>${data.absent}</td>
+            `;
+            return row;
+        }
+
+        // Function to fetch and render employee balance data from Google Sheet
+        function fetchAndRenderEmployeeBalanceData() {
+            console.log("Attempting to fetch employee balance data...");
+            // This assumes a google.script.run function exists on the server-side (Apps Script)
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run.withSuccessHandler(function(data) {
+                    console.log("Received employee balance data:", data);
+                    if (data && data.length > 0) {
+                        masterEmployeeBalanceData = data.map(item => ({
+                            ...item,
+                            originalRow: createEmployeeBalanceRowElement(item)
+                        }));
+                        console.log("Master employee balance data after mapping:", masterEmployeeBalanceData);
+                        renderEmployeeBalanceTable();
+                    } else {
+                        console.log("No employee balance data received or data is empty.");
+                        if (employeeBalanceTableBody) {
+                            employeeBalanceTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No employee balance data available.</td></tr>';
+                        }
+                    }
+                }).withFailureHandler(function(error) {
+                    console.error("Error fetching employee balance data from Google Sheet:", error);
+                    showMessageBox(`Failed to load employee balance data: ${error.message}`, 'error');
+                }).getEmployeeBalanceData();
+            } else {
+                console.warn("google.script.run is not available. Cannot fetch employee balance data.");
+                if (employeeBalanceTableBody) {
+                    employeeBalanceTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4">Google Apps Script interface not available.</td></tr>';
+                }
+            }
+        }
+
+        function renderEmployeeBalanceTable() {
+            if (!employeeBalanceTableBody) return; // Ensure table body exists
+
+            console.log("Rendering employee balance table. Current master data length:", masterEmployeeBalanceData.length);
+            console.log("Current Employee Balance Filters:", currentEmployeeBalanceFilters);
+
+            let filteredData = masterEmployeeBalanceData.filter(item => {
+                const matchesSearch = item.originalRow.textContent.toLowerCase().includes(currentEmployeeBalanceFilters.searchTerm.toLowerCase());
+                const matchesDept = currentEmployeeBalanceFilters.department === '' ||
+                                    item.department.toLowerCase() === currentEmployeeBalanceFilters.department.toLowerCase();
+                console.log(`Filtering: Item Name: ${item.name}, Dept: ${item.department}, Filter Dept: ${currentEmployeeBalanceFilters.department}, Search Term: ${currentEmployeeBalanceFilters.searchTerm}, Matches Search: ${matchesSearch}, Matches Dept: ${matchesDept}`);
+                return matchesSearch && matchesDept;
+            });
+            console.log("Filtered data for rendering:", filteredData);
+
+
+            if (currentEmployeeBalanceSort.column) {
+                const sortColumn = currentEmployeeBalanceSort.column;
+                const sortDirection = currentEmployeeBalanceSort.direction;
+                const header = Array.from(employeeBalanceTable.querySelectorAll('th')).find(h => h.dataset.column === sortColumn);
+                const sortType = header ? header.dataset.type : 'string';
+                console.log(`Sorting by: ${sortColumn}, Direction: ${sortDirection}, Type: ${sortType}`);
+
+                filteredData.sort((a, b) => {
+                    let aValue = a[sortColumn];
+                    let bValue = b[sortColumn];
+
+                    if (sortType === 'number') {
+                        aValue = parseFloat(aValue);
+                        bValue = parseFloat(bValue);
+                    } else if (sortType === 'string') {
+                        aValue = String(aValue).toLowerCase();
+                        bValue = String(bValue).toLowerCase();
+                    }
+
+                    if (aValue < bValue) {
+                        return sortDirection === 'asc' ? -1 : 1;
+                    }
+                    if (aValue > bValue) {
+                        return sortDirection === 'asc' ? 1 : -1;
+                    }
+                    return 0;
+                });
+            }
+
+            employeeBalanceTableBody.innerHTML = '';
+            if (filteredData.length > 0) {
+                filteredData.forEach(item => {
+                    employeeBalanceTableBody.appendChild(item.originalRow);
+                });
+            } else {
+                employeeBalanceTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No matching employee balance data found.</td></tr>';
+            }
+
+
+            employeeBalanceTable.querySelectorAll('th .sort-icon').forEach(icon => {
+                icon.classList.remove('asc', 'desc');
+            });
+
+            const activeHeader = Array.from(employeeBalanceHeaders).find(h => h.dataset.column === currentEmployeeBalanceSort.column);
+            if (activeHeader) {
+                const activeSortIcon = activeHeader.querySelector('.sort-icon');
+                if (activeSortIcon) {
+                    activeSortIcon.classList.add(currentEmployeeBalanceSort.direction);
+                }
+            }
+        }
+
+
+        // Audit Logs Table Logic - Declarations and Functions (Moved to top for scope)
+        const auditLogsSearchInput = document.getElementById('auditLogsSearchInput');
+        const filterToggleButtonAuditLogs = document.getElementById('filterToggleButtonAuditLogs');
+        const filterOptionsPopoverAuditLogs = document.getElementById('filterOptionsPopoverAuditLogs');
+
+        // New month and year filter dropdowns
+        const monthFilterDropdownAuditLogs = document.getElementById('monthFilterDropdownAuditLogs');
+        const monthFilterSelectedValueAuditLogs = monthFilterDropdownAuditLogs ? monthFilterDropdownAuditLogs.querySelector('.filter-selected-value') : null;
+        const monthFilterContentAuditLogs = document.getElementById('monthFilterContentAuditLogs');
+
+        const yearFilterDropdownAuditLogs = document.getElementById('yearFilterDropdownAuditLogs');
+        const yearFilterSelectedValueAuditLogs = yearFilterDropdownAuditLogs ? yearFilterDropdownAuditLogs.querySelector('.filter-selected-value') : null;
+        const yearFilterContentAuditLogs = document.getElementById('yearFilterContentAuditLogs');
+
+        const userFilterDropdownAuditLogs = document.getElementById('userFilterDropdownAuditLogs');
+        const userFilterSelectedValueAuditLogs = userFilterDropdownAuditLogs ? userFilterDropdownAuditLogs.querySelector('.filter-selected-value') : null;
+        const userFilterContentAuditLogs = document.getElementById('userFilterContentAuditLogs');
+        const userFilterOptionsAuditLogs = userFilterContentAuditLogs ? userFilterContentAuditLogs.querySelectorAll('.filter-option') : [];
+        const applyFiltersButtonAuditLogs = document.getElementById('applyFiltersButtonAuditLogs');
+
+        const auditLogsTable = document.getElementById('auditLogsTable');
+        const auditLogsTableBody = auditLogsTable ? auditLogsTable.querySelector('tbody') : null;
+        const auditLogsHeaders = auditLogsTable ? auditLogsTable.querySelectorAll('th[data-sortable="true"]') : [];
+
+
+        let masterAuditLogsData = [];
+        let currentAuditLogsFilters = {
+            month: '', // Changed from dateRange
+            year: '',  // New filter
+            user: '',
+            searchTerm: ''
+        };
+        let currentAuditLogsSort = {
+            column: null,
+            direction: 'asc'
+        };
+
+        // Helper function to create a table row element for audit logs
+        function createAuditLogRowElement(data) {
+            const row = document.createElement('tr');
+            row.innerHTML = `
+                <td>${data.logId}</td>
+                <td>${data.dateTime}</td>
+                <td>${data.action}</td>
+                <td>${data.user}</td>
+            `;
+            return row;
+        }
+
+        // Function to fetch and render audit logs data
+        function fetchAndRenderAuditLogsData() {
+            console.log("Attempting to fetch audit logs data...");
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run.withSuccessHandler(function(data) {
+                    console.log("Received audit logs data:", data);
+                    if (data && data.length > 0) {
+                        masterAuditLogsData = data.map(item => ({
+                            ...item,
+                            originalRow: createAuditLogRowElement(item)
+                        }));
+                        console.log("Master audit logs data after mapping:", masterAuditLogsData);
+                        renderAuditLogsTable();
+                    } else {
+                        console.log("No audit logs data received or data is empty.");
+                        if (auditLogsTableBody) {
+                            auditLogsTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No audit log data available.</td></tr>';
+                        }
+                    }
+                }).withFailureHandler(function(error) {
+                    console.error("Error fetching audit logs data from Google Sheet:", error);
+                    showMessageBox(`Failed to load audit logs data: ${error.message}`, 'error');
+                }).getAuditLogsData(); // Call the new Apps Script function
+            } else {
+                console.warn("google.script.run is not available. Cannot fetch audit logs data.");
+                if (auditLogsTableBody) {
+                    auditLogsTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Google Apps Script interface not available.</td></tr>';
+                }
+            }
+        }
+
+        function renderAuditLogsTable() {
+            if (!auditLogsTableBody) return; // Ensure table body exists
+
+            console.log("Rendering audit logs table. Current master data length:", masterAuditLogsData.length);
+            console.log("Current Audit Logs Filters:", currentAuditLogsFilters);
+
+            let filteredData = masterAuditLogsData.filter(item => {
+                const matchesSearch = item.originalRow.textContent.toLowerCase().includes(currentAuditLogsFilters.searchTerm.toLowerCase());
+                const matchesUser = currentAuditLogsFilters.user === '' || item.user.toLowerCase() === currentAuditLogsFilters.user.toLowerCase();
+
+                let matchesMonth = true;
+                if (currentAuditLogsFilters.month) {
+                    const logDate = new Date(item.dateTime);
+                    matchesMonth = (logDate.getMonth() + 1).toString() === currentAuditLogsFilters.month;
+                }
+
+                let matchesYear = true;
+                if (currentAuditLogsFilters.year) {
+                    const logDate = new Date(item.dateTime);
+                    matchesYear = logDate.getFullYear().toString() === currentAuditLogsFilters.year;
+                }
+                
+                console.log(`AL Filtering: Item User: ${item.user}, Filter User: ${currentAuditLogsFilters.user}, Item Date: ${item.dateTime}, Filter Month: ${currentAuditLogsFilters.month}, Filter Year: ${currentAuditLogsFilters.year}, Matches Search: ${matchesSearch}, Matches User: ${matchesUser}, Matches Month: ${matchesMonth}, Matches Year: ${matchesYear}`);
+                return matchesSearch && matchesUser && matchesMonth && matchesYear;
+            });
+            console.log("Filtered data for rendering:", filteredData);
+
+
+            if (currentAuditLogsSort.column) {
+                const sortColumn = currentAuditLogsSort.column;
+                const sortDirection = currentAuditLogsSort.direction;
+                const header = Array.from(auditLogsTable.querySelectorAll('th')).find(h => h.dataset.column === sortColumn);
+                const sortType = header ? header.dataset.type : 'string';
+                console.log(`Sorting by: ${sortColumn}, Direction: ${sortDirection}, Type: ${sortType}`);
+
+                filteredData.sort((a, b) => {
+                    let aValue = a[sortColumn];
+                    let bValue = b[sortColumn];
+
+                    if (sortType === 'datetime') {
+                        aValue = new Date(aValue);
+                        bValue = new Date(bValue);
+                    } else if (sortType === 'string') {
+                        aValue = String(aValue).toLowerCase();
+                        bValue = String(bValue).toLowerCase();
+                    }
+
+                    if (aValue < bValue) {
+                        return sortDirection === 'asc' ? -1 : 1;
+                    }
+                    if (aValue > bValue) {
+                        return sortDirection === 'asc' ? 1 : -1;
+                    }
+                    return 0;
+                });
+            }
+
+            auditLogsTableBody.innerHTML = '';
+            if (filteredData.length > 0) {
+                filteredData.forEach(item => {
+                    auditLogsTableBody.appendChild(item.originalRow);
+                });
+            } else {
+                auditLogsTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No matching audit log data found.</td></tr>';
+            }
+
+
+            auditLogsTable.querySelectorAll('th .sort-icon').forEach(icon => {
+                icon.classList.remove('asc', 'desc');
+            });
+
+            const activeHeader = Array.from(auditLogsHeaders).find(h => h.dataset.column === currentAuditLogsSort.column);
+            if (activeHeader) {
+                const activeSortIcon = activeHeader.querySelector('.sort-icon');
+                if (activeSortIcon) {
+                    activeSortIcon.classList.add(currentAuditLogsSort.direction);
+                }
+            }
+        }
+
+
+        // --- Helper Functions ---
+
+        // Debounce function to limit how often a function is called
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                const context = this;
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(context, args), delay);
+            };
+        }
+
+        // Function to update step indicator
+        function updateStepIndicator(activeStep) {
+            stepItems.forEach(item => {
+                const step = parseInt(item.dataset.step);
+                if (step === activeStep) {
+                    item.classList.add('active');
+                    item.querySelector('.step-circle').classList.remove('step-inactive');
+                    item.querySelector('.step-circle').classList.add('step-active');
+                } else if (step < activeStep) {
+                    item.classList.add('active');
+                    item.querySelector('.step-circle').classList.remove('step-inactive');
+                    item.querySelector('.step-circle').classList.add('step-active');
+                }
+                else {
+                    item.classList.remove('active');
+                    item.querySelector('.step-circle').classList.remove('step-active');
+                    item.querySelector('.step-circle').classList.add('step-inactive');
+                }
+            });
+        }
+
+        // Function to show a specific card and update active link/step
+        function showPage(pageId) {
+            // Hide all content cards
+            if (leaveFormCard) leaveFormCard.style.display = 'none';
+            if (leaveHistoryCard) leaveHistoryCard.style.display = 'none';
+            if (employeeBalanceCard) employeeBalanceCard.style.display = 'none';
+            if (auditLogsCard) auditLogsCard.style.display = 'none';
+            if (mediaUploadCard) mediaUploadCard.style.display = 'none';
+            if (forceLeaveCard) forceLeaveCard.style.display = 'none';
+            if (forceLeaveHistoryCard) forceLeaveHistoryCard.style.display = 'none';
+            
+
+            // Hide step indicator by default, only show for Leave Form and File Upload
+            if (stepIndicatorContainer) stepIndicatorContainer.style.display = 'none';
+            if (forceLeaveTopDateDisplayContainer) forceLeaveTopDateDisplayContainer.classList.remove('active');
+            employeeBalanceTopDateDisplayContainer.classList.remove('active');
+            auditLogsTopDateDisplayContainer.classList.remove('active');
+
+            document.querySelectorAll('.sidebar nav a').forEach(link => link.classList.remove('active-link'));
+
+            // Show the selected card and set active link/step
+            if (pageId === 'leaveForm') {
+                if (leaveFormCard) leaveFormCard.style.display = 'block';
+                const leaveFormLink = document.getElementById('leaveFormLink');
+                if (leaveFormLink) leaveFormLink.classList.add('active-link');
+                if (stepIndicatorContainer) stepIndicatorContainer.style.display = 'flex';
+                updateStepIndicator(1);
+            } else if (pageId === 'leaveHistory') {
+                if (leaveHistoryCard) leaveHistoryCard.style.display = 'block';
+                const leaveHistoryLink = document.getElementById('leaveHistoryLink');
+                if (leaveHistoryLink) leaveHistoryLink.classList.add('active-link');
+                fetchAndRenderLeaveHistoryData(); 
+            } else if (pageId === 'employeeBalance') {
+                if (employeeBalanceCard) employeeBalanceCard.style.display = 'block';
+                const employeeBalanceLink = document.getElementById('employeeBalanceLink');
+                if (employeeBalanceLink) employeeBalanceLink.classList.add('active-link');
+                if (employeeBalanceTopDateDisplayContainer) employeeBalanceTopDateDisplayContainer.classList.add('active');
+                const employeeBalanceDateDisplay = document.getElementById('employeeBalanceDateDisplay');
+                    if (employeeBalanceDateDisplay) {
+                        employeeBalanceDateDisplay.textContent = `Today is ${longFormattedDate}`;
+                    }
+                fetchAndRenderEmployeeBalanceData(); 
+            } else if (pageId === 'auditLogs') {
+                if (auditLogsCard) auditLogsCard.style.display = 'block';
+                const auditLogsLink = document.getElementById('auditLogsLink');
+                if (auditLogsLink) auditLogsLink.classList.add('active-link');
+                if (auditLogsTopDateDisplayContainer) auditLogsTopDateDisplayContainer.classList.add('active');
+                const auditLogsDateDisplay = document.getElementById('auditLogsDateDisplay');
+                    if (auditLogsDateDisplay) {
+                        auditLogsDateDisplay.textContent = `Today is ${longFormattedDate}`;
+                    }
+                fetchAndRenderAuditLogsData(); 
+            } else if (pageId === 'fileUpload') {
+                if (mediaUploadCard) mediaUploadCard.style.display = 'block';
+                const fileUploadLink = document.getElementById('fileUploadLink');
+                if (fileUploadLink) fileUploadLink.classList.add('active-link');
+                if (stepIndicatorContainer) stepIndicatorContainer.style.display = 'flex';
+                updateStepIndicator(5);
+                renderUploadedMediaFiles();
+            } else if (pageId === 'forceLeave') {
+                if (forceLeaveCard) forceLeaveCard.style.display = 'block';
+                const forceLeaveLink = document.getElementById('forceLeaveLink');
+                if (forceLeaveLink) forceLeaveLink.classList.add('active-link');
+                if (forceLeaveTopDateDisplayContainer) forceLeaveTopDateDisplayContainer.classList.add('active'); 
+                if (forceLeaveDateDisplay) { 
+                    forceLeaveDateDisplay.textContent = `Today is ${longFormattedDate}`;
+                }
+                renderConfirmedForceLeaveTable();
+            } else if (pageId === 'forceLeaveHistory') {
+                if (forceLeaveHistoryCard) forceLeaveHistoryCard.style.display = 'block';
+                const forceLeaveLink = document.getElementById('forceLeaveLink');
+                if (forceLeaveLink) forceLeaveLink.classList.add('active-link');
+               
+            }
+        }
+
+        function logUserAction(action, role) {
+            // Log actions for hr_admin, mis_admin, and employee roles
+            if ((role === 'hr_admin' || role === 'mis_admin') && typeof google !== 'undefined' && google.script && google.script.run && currentUserEmail) {
+                google.script.run.withSuccessHandler(function() {
+                    console.log(`Audit Log successful for action: "${action}" by ${currentUserEmail} (${role})`);
+                }).withFailureHandler(function(error) {
+                    console.error(`Error logging audit action "${action}" for ${currentUserEmail}:`, error.message);
+                }).addAuditLog(action, currentUserEmail);
+            } else {
+                console.warn(`google.script.run not available or currentUserEmail is empty. Cannot log action: ${action}`);
+            }
+        }
+
+        // --- Login Logic ---
+        if (togglePassword) {
+            togglePassword.addEventListener('click', function() {
+                const type = loginPasswordInput.getAttribute('type') === 'password' ? 'text' : 'password';
+                loginPasswordInput.setAttribute('type', type);
+                this.classList.toggle('fa-eye');
+                this.classList.toggle('fa-eye-slash');
+            });
+        }
+
+        if (loginPasswordInput) {
+            loginPasswordInput.addEventListener('input', function() {
+                validatePassword();
+            });
+        }
+
+        function validatePassword() {
+            if (!loginPasswordInput) return false;
+            const password = loginPasswordInput.value;
+            if (passwordError) passwordError.textContent = '';
+
+            if (password.length < 8) {
+                if (passwordError) passwordError.textContent = 'Password must be at least 8 characters long.';
+                return false;
+            }
+            if (!/[A-Z]/.test(password)) {
+                if (passwordError) passwordError.textContent = 'Password must contain at least one uppercase letter.';
+                return false;
+            }
+            if (!/[a-z]/.test(password)) {
+                if (passwordError) passwordError.textContent = 'Password must contain at least one lowercase letter.';
+                return false;
+            }
+            if (!/[0-9]/.test(password)) {
+                if (passwordError) passwordError.textContent = 'Password must contain at least one number.';
+                return false;
+            }
+            if (!/[^A-Za-z0-9]/.test(password)) {
+                if (passwordError) passwordError.textContent = 'Password must contain at least one special character.';
+                return false;
+            }
+            return true;
+        }
+
+        function showLoginErrorModal(message) {
+                const loginOverlay = document.createElement('div');
+                loginOverlay.classList.add('login-overlay', 'show'); // Add 'show' class immediately for transition
+
+                // The SVG for the retry icon
+                const retryIconSvg = `
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" class="bi bi-repeat" viewBox="0 0 16 16">
+                        <path d="M11 5.466V4H5a4 4 0 0 0-3.584 5.777.5.5 0 1 1-.896.446A5 5 0 0 1 5 3h6V1.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384l-2.36 1.966a.25.25 0 0 1-.41-.192m3.81.086a.5.5 0 0 1 .67.225A5 5 0 0 1 11 13H5v1.466a.25.25 0 0 1-.41.192l-2.36-1.966a.25.25 0 0 1 0-.384l2.36-1.966a.25.25 0 0 1 .41.192V12h6a4 4 0 0 0 3.585-5.777.5.5 0 0 1 .225-.67Z"/>
+                    </svg>
+                `;
+
+                loginOverlay.innerHTML = `
+                    <div class="login-overlay-content">
+                        <div class="login-overlay-icon">
+                            ${retryIconSvg}
+                        </div>
+                        <p class="login-overlay-text">${message}</p>
+                        <div class="login-overlay-actions">
+                            <button class="login-overlay-button close" id="closeLoginErrorModal">Close</button>
+                        </div>
+                    </div>
+                `;
+                document.body.appendChild(loginOverlay);
+
+                document.getElementById('closeLoginErrorModal').addEventListener('click', () => {
+                    loginOverlay.classList.remove('show'); 
+                    loginOverlay.addEventListener('transitionend', () => {
+                        loginOverlay.remove();
+                    }, { once: true }); 
+                });
+
+                loginOverlay.addEventListener('click', (event) => {
+                    if (event.target === loginOverlay) {
+                        loginOverlay.classList.remove('show'); 
+                        loginOverlay.addEventListener('transitionend', () => {
+                            loginOverlay.remove();
+                        }, { once: true });
+                    }
+                });
+            }
+
+        loginForm.addEventListener('submit', function(event) {
+          event.preventDefault();
+
+          const email = loginEmailInput.value.toLowerCase();
+          const password = loginPasswordInput.value;
+
+          if (!validatePassword()) {
+            loginPasswordInput.focus(); 
+
+            loginPasswordInput.classList.add('input-error'); 
+
+            return;
+          }
+          else {
+            loginPasswordInput.classList.remove('input-error');
+            passwordError.textContent = '';
+          }
+
+          // User accounts logic
+          let role = null;
+          if (email === 'hr.malaya@gmail.com' && password === 'HR_Admin@123') {
+              role = 'hr_admin';
+          } else if (email === 'mis.malaya@gmail.com' && password === 'MIS_Admin@123') {
+              role = 'mis_admin';
+          } else if (email === 'employee.malaya@gmail.com' && password === 'Employee@123') {
+              role = 'employee';
+          } else if (email === 'malaya@gmail.com' && password === 'Malaya@1') { 
+              role = 'hr_admin'; 
+          }
+
+          if (role) {
+              handleLoginSuccess(role, email); 
+          } else {
+              // Credentials are incorrect, show error modal
+              showLoginErrorModal('Incorrect email or password. Please try again.');
+              loginPasswordInput.value = ''; 
+              loginEmailInput.focus(); 
+          }
+        });
+
+        function showMessageBox(message, type = 'info') {
+          const modalOverlay = document.createElement('div');
+          modalOverlay.classList.add('modal-overlay', 'show'); 
+
+          let iconSvg = '';
+          let iconColor = '';
+          if (type === 'success') {
+              iconSvg = `<svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>`;
+              iconColor = '#22c55e'; // Green
+          } else if (type === 'error') {
+              iconSvg = `<svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>`;
+              iconColor = '#ef4444'; // Red
+          } else { // info or warning
+                iconSvg = `<svg fill="currentColor" viewBox="0 0 20 20" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clip-rule="evenodd"></path></svg>`;
+                iconColor = '#f59e0b'; // Amber/Orange for info/warning
+            }
+
+          modalOverlay.innerHTML = `
+              <div class="modal-content">
+                  <div class="modal-icon" style="color: ${iconColor};">
+                      ${iconSvg}
+                  </div>
+                  <p class="modal-text">${message}</p>
+              </div>
+          `; // Removed the modal-actions div and the OK button
+          document.body.appendChild(modalOverlay);
+
+          document.body.classList.add('modal-open');
+
+          // Event listener to close the modal when clicking outside the content
+          modalOverlay.addEventListener('click', (event) => {
+              if (event.target === modalOverlay) { // Check if the click was directly on the overlay
+                  modalOverlay.classList.remove('show'); // Trigger fade-out transition
+                  document.body.classList.remove('modal-open'); // Remove body class
+
+                  modalOverlay.addEventListener('transitionend', function handler() {
+                      modalOverlay.remove();
+                      modalOverlay.removeEventListener('transitionend', handler); // Remove self
+                  }, { once: true }); // Ensure listener is removed after one use
+              }
+          });
+        }
+
+        function handleLoginSuccess(role, email) { // Added email parameter
+            if (loginPage) loginPage.style.display = 'none';
+            if (appContent) appContent.style.display = 'flex';
+
+            currentUserEmail = email; // Set the global currentUserEmail
+            currentUserRole = role;   // Set the global currentUserRole
+
+            // HR Admin and MIS Admin have access to all pages
+            if (role === 'hr_admin') {
+                if (navLeaveHistory) navLeaveHistory.style.display = 'list-item';
+                if (navEmployeeBalance) navEmployeeBalance.style.display = 'list-item';
+                if (navAuditLogs) navAuditLogs.style.display = 'list-item';
+                if (navLeaveForm) navLeaveForm.style.display = 'list-item';
+                if (navFileUpload) navFileUpload.style.display = 'list-item';
+                if (navForceLeave) navForceLeave.style.display = 'list-item';
+                showPage('leaveHistory'); 
+                logUserAction(`${role} user logged in`, currentUserRole);
+            } else if (role === 'mis_admin') {
+                if (navLeaveHistory) navLeaveHistory.style.display = 'list-item';
+                if (navEmployeeBalance) navEmployeeBalance.style.display = 'list-item';
+                if (navAuditLogs) navAuditLogs.style.display = 'list-item';
+                if (navLeaveForm) navLeaveForm.style.display = 'list-item';
+                if (navFileUpload) navFileUpload.style.display = 'list-item';
+                if (navForceLeave) navForceLeave.style.display = 'none';
+                showPage('leaveHistory'); 
+                logUserAction(`${role} user logged in`, currentUserRole);
+            } else if (role === 'employee') {
+                if (navLeaveHistory) navLeaveHistory.style.display = 'none';
+                if (navEmployeeBalance) navEmployeeBalance.style.display = 'none';
+                if (navAuditLogs) navAuditLogs.style.display = 'none';
+                if (navLeaveForm) navLeaveForm.style.display = 'list-item';
+                if (navFileUpload) navFileUpload.style.display = 'list-item';
+                if (navForceLeave) navForceLeave.style.display = 'none';
+                showPage('leaveForm');
+                // logUserAction('Employee user logged in', currentUserRole); 
+            }
+            showMessageBox(`Welcome, ${role} user!`, 'success');
+        }
+
+        if (logoutLink) {
+            logoutLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                logUserAction('User logged out', currentUserRole); // Audit Log
+                if (appContent) appContent.style.display = 'none';
+                if (loginPage) loginPage.style.display = 'flex';
+                if (loginForm) loginForm.reset();
+                if (passwordError) passwordError.textContent = '';
+                document.querySelectorAll('.sidebar nav a').forEach(link => link.classList.remove('active-link'));
+                const leaveFormLink = document.getElementById('leaveFormLink');
+                if (leaveFormLink) leaveFormLink.classList.add('active-link');
+                clearLeaveRequestForm();
+                currentUserEmail = '';
+                currentUserRole = ''; 
+            });
+        }
+
+        // --- Main App Navigation and Functionality (Existing Code) ---
+
+        // Navigation event listeners for sidebar
+        const leaveHistoryLink = document.getElementById('leaveHistoryLink');
+        if (leaveHistoryLink) {
+            leaveHistoryLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showPage('leaveHistory');
+            });
+        }
+
+        const employeeBalanceLink = document.getElementById('employeeBalanceLink');
+        if (employeeBalanceLink) {
+            employeeBalanceLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showPage('employeeBalance');
+            });
+        }
+
+        const auditLogsLink = document.getElementById('auditLogsLink');
+        if (auditLogsLink) {
+            auditLogsLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showPage('auditLogs');
+            });
+        }
+
+        const leaveFormLink = document.getElementById('leaveFormLink');
+        if (leaveFormLink) {
+            leaveFormLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showPage('leaveForm');
+            });
+        }
+
+        const fileUploadLink = document.getElementById('fileUploadLink');
+        if (fileUploadLink) {
+            fileUploadLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showPage('fileUpload');
+            });
+        }
+        if (forceLeaveLink) {
+            forceLeaveLink.addEventListener('click', (e) => {
+                e.preventDefault();
+                showPage('forceLeave');
+            });
+        }
+
+        // Function for Leave History Cards
+        function employeeSummarySuccess(rowCount) {
+          document.getElementById('employee-count').innerText = rowCount;
+        }
+
+        function employeeSummaryFail(error) {
+          document.getElementById('employee-count').innerText = 'Error: ' + error.message;
+          console.error(error);
+        }
+
+        function employeeSummaryCard() {
+          google.script.run
+            .withSuccessHandler(employeeSummarySuccess)
+            .withFailureHandler(employeeSummaryFail)
+            .displayEmployeeCount('A');
+        }
+
+        function pendingSummarySuccess(rowCount) {
+          document.getElementById('pending-count').innerText = rowCount;
+        }
+
+        function pendingSummaryFail(error) {
+          document.getElementById('pending-count').innerText = 'Error: ' + error.message;
+          console.error(error);
+        }
+
+        function pendingSummaryCard() {
+          google.script.run
+            .withSuccessHandler(pendingSummarySuccess)
+            .withFailureHandler(pendingSummaryFail)
+            .displayPendingCount('K');
+        }
+        
+        function requestSummarySuccess(rowCount) {
+          document.getElementById('request-count').innerText = rowCount;
+        }
+
+        function requestSummaryFail(error) {
+          document.getElementById('request-count').innerText = 'Error: ' + error.message;
+          console.error(error);
+        }
+
+        function requestSummaryCard() {
+          google.script.run
+            .withSuccessHandler(requestSummarySuccess)
+            .withFailureHandler(requestSummaryFail)
+            .displayRequestCount('B');
+        };
+
+        function updateCounts() {
+          google.script.run.withSuccessHandler(function(count) {
+          document.getElementById('employeeCount').innerText = count;
+        }).displayEmployeeCount('A');
+
+          google.script.run.withSuccessHandler(function(count) {
+          document.getElementById('pendingCount').innerText = count;
+        }).displayPendingCount('K');
+
+          google.script.run.withSuccessHandler(function(count) {
+          document.getElementById('requestCount').innerText = count;
+        }).displayRequestCount('B');
+      }
+
+      window.onload = function() {
+          updateCounts();
+          setInterval(updateCounts, 3000);
+      };
+
+      function updateCounts() {
+          employeeSummaryCard();
+          pendingSummaryCard();
+          requestSummaryCard();
+      }
+
+
+        // Modal functionality for Submit button on Leave Form
+        if (openModalBtn) {
+            openModalBtn.addEventListener('click', () => {
+                // Validate form fields before showing the modal
+                const nameInput = document.getElementById('fullName');
+                const employeeNumberInput = document.getElementById('employeeNumber');
+                const departmentInput = document.getElementById('department');
+                const leaveTypeSelect = document.getElementById('leaveType');
+                const leaveDurationSelect = document.getElementById('leaveDuration');
+                const startDateInput = document.getElementById('startDate');
+                const endDateInput = document.getElementById('endDate');
+
+                if (!nameInput || !nameInput.value.trim()) {
+                    showMessageBox('Please enter your full name.', 'error');
+                    return;
+                }
+                if (!employeeNumberInput || !employeeNumberInput.value.trim()) {
+                    showMessageBox('Employee Number is required. Please select a valid employee.', 'error');
+                    return;
+                }
+                if (!departmentInput || !departmentInput.value.trim()) {
+                    showMessageBox('Department is required. Please select a valid employee.', 'error');
+                    return;
+                }
+                if (!leaveTypeSelect || !leaveTypeSelect.value) {
+                    showMessageBox('Please select a leave type.', 'error');
+                    return;
+                }
+                if (!leaveDurationSelect || !leaveDurationSelect.value) {
+                    showMessageBox('Please select a leave duration.', 'error');
+                    return;
+                }
+                if (!startDateInput || !startDateInput.value) {
+                    showMessageBox('Please select a start date for your leave.', 'error');
+                    return;
+                }
+                if (!endDateInput || !endDateInput.value) {
+                    showMessageBox('Please select an end date for your leave.', 'error');
+                    return;
+                }
+
+                // Check if end date is before start date
+                const startDate = new Date(startDateInput.value);
+                const endDate = new Date(endDateInput.value);
+                if (endDate < startDate) {
+                    showMessageBox('End Date cannot be before Start Date.', 'error');
+                    return;
+                }
+
+                if (submissionModal) submissionModal.classList.add('show');
+            });
+        }
+
+        if (cancelSubmissionBtn) {
+            cancelSubmissionBtn.addEventListener('click', () => {
+                if (submissionModal) submissionModal.classList.remove('show');
+                logUserAction('Cancelled Leave Request Submission', currentUserRole);
+            });
+        }
+
+        if (confirmSubmissionBtn) {
+            confirmSubmissionBtn.addEventListener('click', () => {
+                const nameInput = document.getElementById('fullName');
+                const employeeNumberInput = document.getElementById('employeeNumber');
+                const departmentInput = document.getElementById('department');
+                const leaveTypeSelect = document.getElementById('leaveType');
+                const leaveDurationSelect = document.getElementById('leaveDuration');
+                const startDateInput = document.getElementById('startDate');
+                const endDateInput = document.getElementById('endDate');
+                const remarksInput = document.getElementById('remarks');
+                const toInput = document.getElementById('to'); 
+                const thruInput = document.getElementById('thru'); 
+                const dateInput = document.getElementById('date'); 
+
+                let daysRequested = 0;
+                if (startDateInput.value && endDateInput.value) {
+                    const startDate = new Date(startDateInput.value);
+                    const endDate = new Date(endDateInput.value);
+                    const diffTime = Math.abs(endDate.getTime() - startDate.getTime());
+                    daysRequested = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1; 
+
+                    if (leaveDurationSelect.value.includes('Half Day')) {
+                        daysRequested = 0.5;
+                    }
+                }
+
+                const requestData = {
+                    fullName: nameInput.value.trim(),
+                    employeeNumber: employeeNumberInput.value.trim(),
+                    department: departmentInput.value.trim(),
+                    leaveType: leaveTypeSelect.value,
+                    leaveDuration: leaveDurationSelect.value, 
+                    startDate: startDateInput.value,
+                    endDate: endDateInput.value,
+                    remarks: remarksInput.value.trim(),
+                    to: toInput.value.trim(),  
+                    thru: thruInput.value.trim(),
+                    date: dateInput.value.trim(), 
+                    totalDays: daysRequested 
+                };
+
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                    if (loadingOverlay) {
+                      loadingOverlay.style.opacity = "0";
+                      loadingOverlay.style.display = "flex";
+                      void loadingOverlay.offsetWidth; 
+                      loadingOverlay.style.opacity = "1";
+                    }
+
+                if (typeof google !== 'undefined' && google.script && google.script.run) {
+                    google.script.run
+                        .withSuccessHandler(function(response) {
+                          if (loadingOverlay) {
+                            loadingOverlay.style.opacity = "0";
+                            setTimeout(() => {
+                              loadingOverlay.style.display = "none";
+                            }, 300);
+                          }
+                            if (response.success) {
+                                showMessageBox(response.message, 'success');
+                                logUserAction(`Submitted a new Leave Request (ID: ${response.leaveId})`, currentUserRole);
+                                updateStepIndicator(2);
+                                
+                                // Call PDF generation function after successful submission
+                                generateAndDownloadPdf(requestData, response.leaveId);
+                                
+                                clearLeaveRequestForm();
+                                // After successful submission, refresh leave history
+                                fetchAndRenderLeaveHistoryData();
+                                fetchAndRenderEmployeeBalanceData(); // Refresh employee balance
+                            } else {
+                                showMessageBox(response.message, 'error');
+                                logUserAction(`Failed to submit Leave Request: ${response.message}`, currentUserRole);
+                            }
+                            if (submissionModal) submissionModal.classList.remove('show');
+                        })
+                        .withFailureHandler(function(error) {
+                           if (loadingOverlay) {
+                            loadingOverlay.style.opacity = "0";
+                            setTimeout(() => {
+                              loadingOverlay.style.display = "none";
+                            }, 300);
+                          }
+                            showMessageBox(`Error submitting leave request: ${error.message}`, 'error');
+                            logUserAction(`Error submitting Leave Request: ${error.message}`, currentUserRole);
+                            if (submissionModal) submissionModal.classList.remove('show');
+                        })
+                        .saveLeaveRequest(requestData);
+                } else {
+                   if (loadingOverlay) {
+                            loadingOverlay.style.opacity = "0";
+                            setTimeout(() => {
+                              loadingOverlay.style.display = "none";
+                            }, 300);
+                          }
+
+                    console.warn("google.script.run is not available. Cannot submit leave request.");
+                    showMessageBox('Google Apps Script interface not available. Cannot submit leave request.', 'error');
+                    if (submissionModal) submissionModal.classList.remove('show');
+                }
+            });
+        }
+
+        /**
+         * Calls Apps Script to generate a PDF and triggers its download on the client side.
+         * @param {Object} requestData - The data from the leave request form.
+         * @param {string} leaveId - The generated leave ID for the form.
+         */
+        function generateAndDownloadPdf(requestData, leaveId) {
+            showMessageBox('Generating PDF... \nPlease wait.', 'info'); 
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                google.script.run
+                    .withSuccessHandler(function(pdfData) {
+                        if (pdfData && pdfData.base64Data && pdfData.fileName) {
+                            const byteCharacters = atob(pdfData.base64Data);
+                            const byteNumbers = new Array(byteCharacters.length);
+                            for (let i = 0; i < byteCharacters.length; i++) {
+                                byteNumbers[i] = byteCharacters.charCodeAt(i);
+                            }
+                            const byteArray = new Uint8Array(byteNumbers);
+                            const blob = new Blob([byteArray], { type: 'application/pdf' });
+
+                            const url = URL.createObjectURL(blob);
+                            const a = document.createElement('a');
+                            a.href = url;
+                            a.download = pdfData.fileName;
+                            document.body.appendChild(a);
+                            a.click();
+                            document.body.removeChild(a);
+                            URL.revokeObjectURL(url); 
+
+                            showMessageBox('PDF generated and downloaded successfully!', 'success');
+                            updateStepIndicator(3); 
+                            logUserAction(`Generated and downloaded Leave Request PDF (ID: ${leaveId})`, currentUserRole);
+                        } else {
+                            showMessageBox('Failed to generate PDF: Invalid data received.', 'error');
+                            logUserAction(`Failed to generate Leave Request PDF (ID: ${leaveId}): Invalid data received.`, currentUserRole);
+                        }
+                    })
+                    .withFailureHandler(function(error) {
+                        showMessageBox(`Error generating PDF: ${error.message}`, 'error');
+                        logUserAction(`Error generating Leave Request PDF (ID: ${leaveId}): ${error.message}`, currentUserRole);
+                    })
+                    .generateLeaveRequestPdf(requestData, leaveId);
+            } else {
+                console.warn("google.script.run is not available. Cannot generate PDF.");
+                showMessageBox('Google Apps Script interface not available. Cannot generate PDF.', 'error');
+            }
+        }
+
+        // Media Upload Logic
+        if (mediaDropArea) {
+            ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+                mediaDropArea.addEventListener(eventName, preventDefaults, false);
+                document.body.addEventListener(eventName, preventDefaults, false);
+            });
+
+            ['dragenter', 'dragover'].forEach(eventName => {
+                mediaDropArea.addEventListener(eventName, () => mediaDropArea.classList.add('highlight'), false);
+            });
+
+            ['dragleave', 'drop'].forEach(eventName => {
+                mediaDropArea.addEventListener(eventName, () => mediaDropArea.classList.remove('highlight'), false);
+            });
+
+            mediaDropArea.addEventListener('drop', handleDrop, false);
+        }
+
+
+        if (mediaFileInput) {
+            mediaFileInput.addEventListener('change', (e) => {
+                handleMediaFiles(e.target.files);
+            });
+        }
+
+        const mediaFilesBtn = document.querySelector('.media-drop-area');
+        if (mediaFilesBtn) {
+            mediaFilesBtn.addEventListener('click', () => {
+                if (mediaFileInput) mediaFileInput.click();
+            });
+        }
+
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        function handleDrop(e) {
+            const dt = e.dataTransfer;
+            const files = dt.files;
+            handleMediaFiles(files);
+        }
+
+        function handleMediaFiles(files) {
+            if (uploadedMediaFiles.length + files.length > 1) {
+                showMessageBox('You can only upload 1 file at a time.', 'error');
+                return;
+            }
+
+            ([...files]).forEach(uploadMediaFile);
+        }
+
+        function uploadMediaFile(file) {
+            const validTypes = ['image/png', 'image/jpeg', 'application/pdf'];
+            if (!validTypes.includes(file.type)) {
+                showMessageBox('Invalid file type. Only JPG, PNG, and PDF files are allowed for media upload.', 'error');
+                return;
+            }
+
+            if (uploadedMediaFiles.some(existingFile => existingFile.name === file.name && existingFile.size === file.size)) {
+                showMessageBox(`File "${file.name}" is already added.`, 'info');
+                return;
+            }
+
+            file.progress = 0;
+            file.isUploading = true;
+
+            uploadedMediaFiles.push(file);
+            renderUploadedMediaFiles();
+
+            let currentProgress = 0;
+            const interval = setInterval(() => {
+                currentProgress += 10;
+                if (currentProgress >= 100) {
+                    currentProgress = 100;
+                    clearInterval(interval);
+                    file.isUploading = false;
+                }
+                file.progress = currentProgress;
+                renderUploadedMediaFiles();
+            }, 100);
+        }
+
+        function renderUploadedMediaFiles() {
+            if (!mediaFileList) return;
+            mediaFileList.innerHTML = '';
+            if (uploadedMediaFiles.length === 0) {
+                return;
+            }
+            uploadedMediaFiles.forEach((file, index) => {
+                const fileItem = document.createElement('div');
+                fileItem.classList.add('media-file-item');
+
+                // Corrected SVG path for the upload icon
+                let fileIconSvg = `
+                    <svg class="media-file-icon" fill="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        ${file.type.startsWith('image/') ? '<path d="M19 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM8.5 12.5l2.5 3.01L14.5 11l4.5 6H5l3.5-4.5z"/>' : '<path d="M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zM13 7V3.5L18.5 9H13z"/>'}
+                    </svg>
+                `;
+
+                const progressBarHtml = file.isUploading ? `
+                    <div class="media-file-progress-bar-container">
+                        <div class="media-file-progress-bar" style="width: ${file.progress}%;"></div>
+                    </div>
+                ` : '';
+
+                fileItem.innerHTML = `
+                    ${fileIconSvg}
+                    <div class="media-file-details">
+                        <div class="file-name">${file.name}</div>
+                        <div class="file-size">${(file.size / 1024).toFixed(1)}kb</div>
+                        ${progressBarHtml}
+                    </div>
+                    <div class="media-file-actions">
+                        <button class="remove-btn" data-index="${index}">&times;</button>
+                    </div>
+                `;
+                mediaFileList.appendChild(fileItem);
+            });
+
+            mediaFileList.querySelectorAll('.remove-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    const indexToRemove = parseInt(e.target.dataset.index);
+                    const removedFileName = uploadedMediaFiles[indexToRemove].name;
+                    uploadedMediaFiles.splice(indexToRemove, 1);
+                    renderUploadedMediaFiles();
+                    logUserAction(`Removed file "${removedFileName}" from upload list`, currentUserRole); // Audit Log
+                });
+            });
+        }
+
+        if (mediaUploadCancelBtn) {
+            mediaUploadCancelBtn.addEventListener('click', () => {
+                uploadedMediaFiles = [];
+                renderUploadedMediaFiles();
+                showPage('leaveForm');
+                logUserAction('Cancelled File Upload process', currentUserRole); // Audit Log
+            });
+        }
+
+        if (mediaUploadBtn) {
+            mediaUploadBtn.addEventListener('click', () => {
+                if (uploadedMediaFiles.length === 0) {
+                    showMessageBox('Please upload at least one file.', 'warning');
+                    return;
+                }
+
+                const fileNumber = fileNumberInput.value.trim();
+                if (!fileNumber) {
+                    showMessageBox('Please enter a file number.', 'error');
+                    return;
+                }
+
+                // Process each file for upload
+                uploadedMediaFiles.forEach(file => {
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        const base64Data = e.target.result.split(',')[1]; 
+                        const fileNameWithNumber = `${fileNumber}_${file.name}`; 
+
+                        const loadingOverlay = document.getElementById('loadingOverlay');
+                        if (loadingOverlay) {
+                          loadingOverlay.style.opacity = "0";
+                          loadingOverlay.style.display = "flex";
+                          void loadingOverlay.offsetWidth; // force reflow
+                          loadingOverlay.style.opacity = "1";
+                        }
+                        
+                        if (typeof google !== 'undefined' && google.script && google.script.run) {
+                            google.script.run
+                                .withSuccessHandler(function(response) {
+                                if (loadingOverlay) {
+                                  loadingOverlay.style.opacity = "0";
+                                  setTimeout(() => {
+                                    loadingOverlay.style.display = "none";
+                                  }, 300);
+                                }
+
+                                    if (response.success) {
+                                        showMessageBox(response.message, 'success');
+                                        logUserAction(`Uploaded document: "${fileNameWithNumber}" (Type: ${file.type}, Size: ${(file.size / 1024).toFixed(1)}KB)`, currentUserRole);
+                                    } else {
+                                        showMessageBox(response.message, 'error');
+                                        logUserAction(`Failed to upload document: "${fileNameWithNumber}" - ${response.message}`, currentUserRole);
+                                    }
+                                    uploadedMediaFiles = []; 
+                                    renderUploadedMediaFiles();
+                                    showPage('leaveForm');
+                                })
+                                .withFailureHandler(function(error) {
+                                if (loadingOverlay) {
+                                  loadingOverlay.style.opacity = "0";
+                                  setTimeout(() => {
+                                    loadingOverlay.style.display = "none";
+                                  }, 300);
+                                }
+                                    showMessageBox(`Error uploading file: ${error.message}`, 'error');
+                                    logUserAction(`Error during document upload: "${fileNameWithNumber}" - ${error.message}`, currentUserRole);
+                                    uploadedMediaFiles = [];
+                                    renderUploadedMediaFiles();
+                                    showPage('leaveForm');
+                                })
+                                .processFileUploadAndLinkToSheet(base64Data, fileNameWithNumber, file.type, fileNumber); 
+                        } else {
+                          if (loadingOverlay) {
+                            loadingOverlay.style.opacity = "0";
+                            setTimeout(() => {
+                              loadingOverlay.style.display = "none";
+                            }, 300);
+                          }
+
+                            console.warn("google.script.run is not available. Cannot upload file to Drive.");
+                            showMessageBox('Google Apps Script interface not available. Cannot upload file.', 'error');
+                        }
+                    };
+                    reader.readAsDataURL(file);
+                });
+            });
+        }
+
+        // for hr scripts
+        const searchInput = document.getElementById('searchInput');
+        const leaveHistoryTable = document.getElementById('leaveHistoryTable');
+        const leaveHistoryTableBody = leaveHistoryTable ? leaveHistoryTable.querySelector('tbody') : null;
+        const filterToggleButton = document.getElementById('filterToggleButton');
+        const filterOptionsPopover = document.getElementById('filterOptionsPopover');
+        const applyFiltersButton = document.getElementById('applyFiltersButton');
+        const resetButtonHistory = document.getElementById('resetButtonHistory');
+        const resetButtonBalance = document.getElementById('resetButtonBalance');
+        const resetButtonLogs = document.getElementById('resetButtonLogs');
+
+        const statusFilterDropdown = document.getElementById('statusFilterDropdown');
+        const statusFilterSelectedValue = statusFilterDropdown ? statusFilterDropdown.querySelector('.filter-selected-value') : null;
+        const statusFilterContent = document.getElementById('statusFilterContent');
+        const statusFilterOptions = statusFilterContent ? statusFilterContent.querySelectorAll('.filter-option') : [];
+
+        const departmentFilterDropdown = document.getElementById('departmentFilterDropdown');
+        const departmentFilterSelectedValue = departmentFilterDropdown ? departmentFilterDropdown.querySelector('.filter-selected-value') : null;
+        const departmentFilterContent = document.getElementById('departmentFilterContent');
+        const departmentFilterOptions = departmentFilterContent ? departmentFilterContent.querySelectorAll('.filter-option') : [];
+
+        let masterLeaveHistoryData = [];
+
+        function createLeaveHistoryRowElement(data) {
+            const row = document.createElement('tr');
+            row.setAttribute('data-leave-id', data.leaveID);
+            row.innerHTML = `
+                <td>${data.leaveID}</td>
+                <td>
+                    <div class="name-cell">
+                        <span>${data.name}</span>
+                    </div>
+                </td>
+                <td>${data.department}</td>
+                <td>${data.startDate}</td>
+                <td>${data.endDate}</td>
+                <td>${data.leaveType}</td>
+                <td>
+                    <div class="status-dropdown-container">
+                        <span class="status-badge status-${(data.status || 'unknown').toLowerCase()}">${data.status || 'N/A'}</span>
+                        <div class="status-dropdown-content">
+                            <span class="status-option status-accepted" data-status="Approved">Approved</span>
+                            <span class="status-option status-rejected" data-status="Rejected">Rejected</span>
+                            <span class="status-option status-pending" data-status="Pending">Pending</span>
+                            <span class="filter-option status-canceled" data-status="Cancelled">Cancelled</span>
+                        </div>
+                    </div>
+                </td>
+            `;
+            return row;
+        }
+
+        // Function to fetch and render leave history data from Google Sheet
+        function fetchAndRenderLeaveHistoryData() {
+            console.log("Attempting to fetch leave history data...");
+            if (typeof google !== 'undefined' && google.script && google.script.run) {
+                console.log("google.script.run is available for fetching leave history.");
+                google.script.run.withSuccessHandler(function(data) {
+                    console.log("Received leave history data from Apps Script:", data); // IMPORTANT LOG
+                    if (data && data.length > 0) {
+                        masterLeaveHistoryData = data.map(item => ({
+                            ...item,
+                            originalRow: createLeaveHistoryRowElement(item)
+                        }));
+                        console.log("Master leave history data after mapping:", masterLeaveHistoryData); // IMPORTANT LOG
+                        renderLeaveHistoryTable();
+                        attachStatusDropdownListeners(); 
+                    } else {
+                        console.log("No leave history data received from Apps Script or data is empty.");
+                        if (leaveHistoryTableBody) {
+                            leaveHistoryTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No leave history data available.</td></tr>';
+                        }
+                    }
+                }).withFailureHandler(function(error) {
+                    console.error("Error fetching leave history data from Google Sheet:", error);
+                    showMessageBox(`Failed to load leave history data: ${error.message}`, 'error');
+                }).getLeaveHistoryData(); 
+            } else {
+                console.warn("google.script.run is not available. Cannot fetch leave history data.");
+                if (leaveHistoryTableBody) {
+                    leaveHistoryTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4">Google Apps Script interface not available.</td></tr>';
+                }
+            }
+        }
+
+
+        let currentLeaveHistoryFilters = {
+            status: '',
+            department: '',
+            searchTerm: ''
+        };
+        let currentLeaveHistorySort = {
+            column: null,
+            direction: 'asc'
+        };
+
+        function renderLeaveHistoryTable() {
+            if (!leaveHistoryTableBody) return;
+
+            console.log("Rendering leave history table. Current master data length:", masterLeaveHistoryData.length);
+            console.log("Current Leave History Filters:", currentLeaveHistoryFilters);
+
+            let filteredData = masterLeaveHistoryData.filter(item => {
+                const matchesSearch = item.originalRow.textContent.toLowerCase().includes(currentLeaveHistoryFilters.searchTerm.toLowerCase());
+                const matchesStatus = currentLeaveHistoryFilters.status === '' || item.status.toLowerCase() === currentLeaveHistoryFilters.status.toLowerCase();
+                const matchesDepartment = currentLeaveHistoryFilters.department === '' || item.department.toLowerCase() === currentLeaveHistoryFilters.department.toLowerCase();
+
+                console.log(`LH Filtering: Item Name: ${item.name}, Dept: ${item.department}, Filter Dept: ${currentLeaveHistoryFilters.department}, Search Term: ${currentLeaveHistoryFilters.searchTerm}, Matches Search: ${matchesSearch}, Matches Status: ${matchesStatus}, Matches Dept: ${matchesDepartment}`);
+                return matchesSearch && matchesStatus && matchesDepartment;
+            });
+            console.log("Filtered data for rendering (Leave History):", filteredData);
+
+
+            if (currentLeaveHistorySort.column && leaveHistoryTable) {
+                const sortColumn = currentLeaveHistorySort.column;
+                const sortDirection = currentLeaveHistorySort.direction;
+                const header = Array.from(leaveHistoryTable.querySelectorAll('th')).find(h => h.dataset.column === sortColumn);
+                const sortType = header ? header.dataset.type : 'string';
+                console.log(`LH Sorting by: ${sortColumn}, Direction: ${sortDirection}, Type: ${sortType}`);
+
+                filteredData.sort((a, b) => {
+                    let aValue = a[sortColumn];
+                    let bValue = b[sortColumn];
+
+                    if (sortType === 'date') {
+                        aValue = new Date(aValue.split('/').reverse().join('-'));
+                        bValue = new Date(bValue.split('/').reverse().join('-'));
+                    } else if (sortType === 'string') {
+                        aValue = String(aValue).toLowerCase();
+                        bValue = String(bValue).toLowerCase();
+                    }
+
+                    if (aValue < bValue) {
+                        return sortDirection === 'asc' ? -1 : 1;
+                    }
+                    if (aValue > bValue) {
+                        return sortDirection === 'asc' ? 1 : -1;
+                    }
+                    return 0;
+                });
+            }
+
+            leaveHistoryTableBody.innerHTML = '';
+            if (filteredData.length > 0) {
+                filteredData.forEach(item => {
+                    leaveHistoryTableBody.appendChild(item.originalRow);
+                });
+            } else {
+                leaveHistoryTableBody.innerHTML = '<tr><td colspan="7" class="text-center py-4">No matching leave history data found.</td></tr>';
+            }
+
+            if (leaveHistoryTable) {
+                leaveHistoryTable.querySelectorAll('th .sort-icon').forEach(icon => {
+                    icon.classList.remove('asc', 'desc');
+                });
+
+                const activeHeader = Array.from(leaveHistoryTable.querySelectorAll('th[data-sortable="true"]')).find(h => h.dataset.column === currentLeaveHistorySort.column);
+                if (activeHeader) {
+                    const activeSortIcon = activeHeader.querySelector('.sort-icon');
+                    if (activeSortIcon) {
+                        activeSortIcon.classList.add(currentLeaveHistorySort.direction);
+                    }
+                }
+            }
+        }
+
+        const debouncedLeaveHistorySearch = debounce((value) => {
+        }, 500); 
+
+        if (searchInput) {
+            searchInput.addEventListener('input', (e) => {
+                currentLeaveHistoryFilters.searchTerm = e.target.value;
+                renderLeaveHistoryTable();
+                debouncedLeaveHistorySearch(e.target.value);
+            });
+        }
+
+        if (filterToggleButton) {
+            filterToggleButton.addEventListener('click', (event) => {
+                if (filterOptionsPopover) filterOptionsPopover.classList.toggle('active');
+                event.stopPropagation();
+            });
+        }
+
+        document.addEventListener('click', (event) => {
+            if (filterOptionsPopover && !filterOptionsPopover.contains(event.target) && event.target !== filterToggleButton) {
+                filterOptionsPopover.classList.remove('active');
+            }
+        });
+
+        if (statusFilterDropdown) {
+            statusFilterDropdown.addEventListener('click', (event) => {
+                statusFilterDropdown.classList.toggle('active');
+                event.stopPropagation();
+            });
+        }
+
+        statusFilterOptions.forEach(option => {
+            option.addEventListener('click', (e) => {
+                const value = option.dataset.value;
+                const text = option.textContent;
+                if (statusFilterSelectedValue) statusFilterSelectedValue.textContent = text;
+                currentLeaveHistoryFilters.status = value;
+
+                if (statusFilterDropdown) statusFilterDropdown.classList.remove('active');
+                e.stopPropagation();
+            });
+        });
+
+        if (departmentFilterDropdown) {
+            departmentFilterDropdown.addEventListener('click', (event) => {
+                departmentFilterDropdown.classList.toggle('active');
+                event.stopPropagation();
+            });
+        }
+
+        departmentFilterOptions.forEach(option => {
+            option.addEventListener('click', (e) => {
+                const value = option.dataset.value;
+                const text = option.textContent;
+                if (departmentFilterSelectedValue) departmentFilterSelectedValue.textContent = text;
+                currentLeaveHistoryFilters.department = value;
+
+                if (departmentFilterDropdown) departmentFilterDropdown.classList.remove('active');
+                e.stopPropagation();
+            });
+        });
+
+        if (applyFiltersButton) {
+            applyFiltersButton.addEventListener('click', () => {
+                renderLeaveHistoryTable();
+                if (filterOptionsPopover) filterOptionsPopover.classList.remove('active');
+            });
+        }
+
+         if (resetButtonHistory) {
+            resetButtonHistory.addEventListener('click', () => {
+                console.log('Reset button for Leave History clicked!');
+
+                // 1. Clear the search input field
+                if (searchInput) {
+                    searchInput.value = '';
+                }
+
+                // 2. Reset filters in memory
+                currentLeaveHistoryFilters.searchTerm = '';
+                currentLeaveHistoryFilters.status = '';
+                currentLeaveHistoryFilters.department = '';
+
+                // 3. Reset filter dropdowns display
+                if (statusFilterSelectedValue) {
+                    statusFilterSelectedValue.textContent = 'All Status';
+                }
+                if (departmentFilterSelectedValue) {
+                    departmentFilterSelectedValue.textContent = 'All Departments';
+                }
+
+                // 4. Reset sorting state
+                currentLeaveHistorySort.column = null;
+                currentLeaveHistorySort.direction = 'asc';
+
+                // 5. Clear active sort icons
+                if (leaveHistoryTable) {
+                    leaveHistoryTable.querySelectorAll('th .sort-icon').forEach(icon => {
+                        icon.classList.remove('asc', 'desc');
+                    });
+                }
+
+                // 6. Hide filter popover
+                if (filterOptionsPopover) {
+                    filterOptionsPopover.classList.remove('active');
+                }
+
+                // 7. Re-render
+                renderLeaveHistoryTable();
+
+                console.log('Leave history search, filters, and sorting have been reset.');
+            });
+        }
+
+
+        function attachStatusDropdownListeners() {
+            const statusDropdownContainers = document.querySelectorAll('.status-dropdown-container');
+            console.log(`Found ${statusDropdownContainers.length} status dropdown containers.`);
+
+            if (statusDropdownContainers.length > 0) {
+                statusDropdownContainers.forEach((container, index) => {
+                    const badge = container.querySelector('.status-badge');
+                    const dropdownContent = container.querySelector('.status-dropdown-content');
+                    const statusOptions = dropdownContent ? dropdownContent.querySelectorAll('.status-option') : [];
+                    
+
+                    if (badge) {
+                        console.log(`Attaching click listener to badge for container ${index}.`);
+                        badge.addEventListener('click', (event) => {
+                            console.log(`Badge clicked for container ${index}. Toggling active class.`);
+                            statusDropdownContainers.forEach(otherContainer => {
+                                if (otherContainer !== container) {
+                                    otherContainer.classList.remove('active');
+                                }
+                            });
+                            container.classList.toggle('active');
+                            event.stopPropagation();
+                        });
+                    } else {
+                        console.warn(`Badge not found for container ${index}.`);
+                    }
+
+                    if (statusOptions.length > 0) {
+                        statusOptions.forEach((option, optionIndex) => {
+                            console.log(`Option clicked: ${option.dataset.status} in container ${index}.`);
+                            option.addEventListener('click', (event) => {
+                                // Only 'hr_admin' can change leave status
+                                if (currentUserRole !== 'hr_admin') {
+                                    showMessageBox('You do not have permission to change leave status.', 'error');
+                                    container.classList.remove('active'); 
+                                    event.stopPropagation();
+                                    return; // Prevent further execution for non-hr_admins
+                                }
+
+                                const newStatus = option.dataset.status;
+                                if (badge) {
+                                    const oldStatus = badge.textContent;
+                                    const rowElement = option.closest('tr');
+                                    const leaveID = rowElement ? rowElement.querySelector('td:first-child').textContent.trim() : 'Unknown ID';
+                                    const loadingOverlay = document.getElementById('loadingOverlay');
+                                    if (loadingOverlay) {
+                                      loadingOverlay.style.opacity = "0";
+                                      loadingOverlay.style.display = "flex";
+                                      void loadingOverlay.offsetWidth; 
+                                      loadingOverlay.style.opacity = "1";
+                                    }
+
+                                    // Call Apps Script to update status in the sheet
+                                    if (typeof google !== 'undefined' && google.script && google.script.run) {
+                                        google.script.run
+                                            .withSuccessHandler(function(response) {
+                                                if (response.success) {
+                                                  if (loadingOverlay) {
+                                                    loadingOverlay.style.opacity = "0";
+                                                    setTimeout(() => {
+                                                      loadingOverlay.style.display = "none";
+                                                    }, 300);
+                                                  }
+                                                    showMessageBox(response.message, 'success');
+                                                    // Update the master data directly to reflect the change immediately
+                                                    const updatedItemIndex = masterLeaveHistoryData.findIndex(item => item.leaveID === leaveID);
+                                                    if (updatedItemIndex !== -1) {
+                                                        masterLeaveHistoryData[updatedItemIndex].status = newStatus;
+                                                        masterLeaveHistoryData[updatedItemIndex].originalRow = createLeaveHistoryRowElement(masterLeaveHistoryData[updatedItemIndex]);
+                                                    }
+                                                    renderLeaveHistoryTable(); 
+                                                    logUserAction(`Changed Leave ID "${leaveID}" status from "${oldStatus}" to "${newStatus}"`, currentUserRole);
+                                                } else {
+                                                  if (loadingOverlay) {
+                                                    loadingOverlay.style.opacity = "0";
+                                                    setTimeout(() => {
+                                                      loadingOverlay.style.display = "none";
+                                                    }, 300);
+                                                  }
+                                                    showMessageBox(response.message, 'error');
+                                                    logUserAction(`Failed to change Leave ID "${leaveID}" status to "${newStatus}": ${response.message}`, currentUserRole);
+                                                }
+                                            })
+                                            .withFailureHandler(function(error) {
+                                              if (loadingOverlay) {
+                                                loadingOverlay.style.opacity = "0";
+                                                setTimeout(() => {
+                                                  loadingOverlay.style.display = "none";
+                                                }, 300);
+                                              }
+                                                showMessageBox(`Error updating status for Leave ID ${leaveID}: ${error.message}`, 'error');
+                                                logUserAction(`Error updating status for Leave ID "${leaveID}": ${error.message}`, currentUserRole);
+                                            })
+                                            .updateLeaveRequestStatus(leaveID, newStatus);
+                                    } else {
+                                        if (loadingOverlay) {
+                                          loadingOverlay.style.opacity = "0";
+                                          setTimeout(() => {
+                                            loadingOverlay.style.display = "none";
+                                          }, 300);
+                                        }
+
+                                        console.warn("google.script.run is not available. Cannot update leave request status.");
+                                        showMessageBox('Google Apps Script interface not available. Cannot update status.', 'error');
+                                    }
+                                }
+
+                                container.classList.remove('active');
+                                event.stopPropagation();
+                            });
+                        });
+                    } else {
+                        console.warn(`No status options found for container ${index}.`);
+                    }
+                });
+
+                document.addEventListener('click', (event) => {
+                    statusDropdownContainers.forEach(container => {
+                        if (!container.contains(event.target)) {
+                            container.classList.remove('active');
+                        }
+                    });
+                    if (filterOptionsPopover && !filterOptionsPopover.contains(event.target) && event.target !== filterToggleButton) {
+                        filterOptionsPopover.classList.remove('active');
+                    }
+                });
+            }
+        }
+
+
+        const leaveHistoryHeaders = leaveHistoryTable ? leaveHistoryTable.querySelectorAll('th[data-sortable="true"]') : [];
+
+        leaveHistoryHeaders.forEach(header => {
+          header.addEventListener('click', () => {
+            const column = header.dataset.column;
+            const type = header.dataset.type;
+
+            if (currentLeaveHistorySort.column === column) {
+                currentLeaveHistorySort.direction = currentLeaveHistorySort.direction === 'asc' ? 'desc' : 'asc';
+            } else {
+                currentLeaveHistorySort.column = column;
+                currentLeaveHistorySort.direction = 'asc';
+            }
+            renderLeaveHistoryTable();
+          });
+        });
+
+        // Debounced search input handlers for Employee Balance
+        const debouncedEmployeeBalanceSearch = debounce((value) => {
+        }, 500); // 500ms delay
+
+        // Employee Balance Table Logic
+        if (employeeBalanceSearchInput) {
+            employeeBalanceSearchInput.addEventListener('input', (e) => {
+                currentEmployeeBalanceFilters.searchTerm = e.target.value;
+                renderEmployeeBalanceTable();
+                debouncedEmployeeBalanceSearch(e.target.value);
+            });
+        }
+
+        if (filterToggleButtonBalance) {
+            filterToggleButtonBalance.addEventListener('click', (event) => {
+                if (filterOptionsPopoverBalance) filterOptionsPopoverBalance.classList.toggle('active');
+                event.stopPropagation();
+            });
+        }
+
+        document.addEventListener('click', (event) => {
+            if (filterOptionsPopoverBalance && !filterOptionsPopoverBalance.contains(event.target) && event.target !== filterToggleButtonBalance && !departmentFilterDropdownBalance.contains(event.target)) {
+                filterOptionsPopoverBalance.classList.remove('active');
+            }
+            // Close the department dropdown if clicked outside, but not if clicking the popover or toggle button
+            if (departmentFilterDropdownBalance && !departmentFilterDropdownBalance.contains(event.target) && event.target !== filterToggleButtonBalance && !filterOptionsPopoverBalance.contains(event.target)) {
+                departmentFilterDropdownBalance.classList.remove('active');
+            }
+        });
+
+        if (departmentFilterDropdownBalance) {
+            departmentFilterDropdownBalance.addEventListener('click', (event) => {
+                departmentFilterDropdownBalance.classList.toggle('active');
+                event.stopPropagation();
+            });
+        }
+
+        departmentFilterOptionsBalance.forEach(option => {
+            option.addEventListener('click', (e) => {
+                const value = option.dataset.value;
+                const text = option.textContent;
+                if (departmentFilterSelectedValueBalance) departmentFilterSelectedValueBalance.textContent = text;
+                currentEmployeeBalanceFilters.department = value;
+                if (departmentFilterDropdownBalance) departmentFilterDropdownBalance.classList.remove('active');
+                e.stopPropagation();
+            });
+        });
+
+        if (applyFiltersButtonBalance) {
+            applyFiltersButtonBalance.addEventListener('click', () => {
+                renderEmployeeBalanceTable();
+                if (filterOptionsPopoverBalance) filterOptionsPopoverBalance.classList.remove('active');
+            });
+        }
+
+        if (resetButtonBalance) {
+          resetButtonBalance.addEventListener('click', () => {
+              console.log('Reset button for Employee Balance clicked!');
+
+              // 1. Clear the search input field
+              if (employeeBalanceSearchInput) {
+                  employeeBalanceSearchInput.value = '';
+              }
+
+              // 2. Reset filters in memory
+              currentEmployeeBalanceFilters.searchTerm = '';
+              currentEmployeeBalanceFilters.department = '';
+
+              // 3. Reset department filter label
+              if (departmentFilterSelectedValueBalance) {
+                  departmentFilterSelectedValueBalance.textContent = 'All Departments';
+                  departmentFilterSelectedValueBalance.dataset.value = ''; 
+              }
+
+              // 4. Reset sorting state if applicable
+              if (currentEmployeeBalanceSort) {
+                  currentEmployeeBalanceSort.column = null;
+                  currentEmployeeBalanceSort.direction = 'asc'; 
+              }
+
+              // 5. Clear sort icons
+              if (employeeBalanceTable) {
+                  employeeBalanceTable.querySelectorAll('th .sort-icon').forEach(icon => {
+                      icon.classList.remove('asc', 'desc');
+                  });
+              }
+
+              // 6. Hide filter popover
+              if (filterOptionsPopoverBalance) {
+                  filterOptionsPopoverBalance.classList.remove('active');
+              }
+
+              // 7. Re-render
+              renderEmployeeBalanceTable();
+
+              console.log('Employee balance search, filters, and sorting have been reset.');
+          });
+      }
+
+        employeeBalanceHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const column = header.dataset.column;
+                if (currentEmployeeBalanceSort.column === column) {
+                    currentEmployeeBalanceSort.direction = currentEmployeeBalanceSort.direction === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentEmployeeBalanceSort.column = column;
+                    currentEmployeeBalanceSort.direction = 'asc';
+                }
+                renderEmployeeBalanceTable();
+            });
+        });
+
+        // Initial render of employee balance table (will be empty until data is fetched)
+        renderEmployeeBalanceTable();
+
+        // Debounced search input handlers for Audit Logs
+        const debouncedAuditLogsSearch = debounce((value) => {
+        }, 500);
+
+        // Audit Logs Table Logic
+        if (auditLogsSearchInput) {
+            auditLogsSearchInput.addEventListener('input', (e) => {
+                currentAuditLogsFilters.searchTerm = e.target.value;
+                renderAuditLogsTable();
+                debouncedAuditLogsSearch(e.target.value);
+            });
+        }
+
+        if (filterToggleButtonAuditLogs) {
+            filterToggleButtonAuditLogs.addEventListener('click', (event) => {
+                if (filterOptionsPopoverAuditLogs) filterOptionsPopoverAuditLogs.classList.toggle('active');
+                event.stopPropagation();
+            });
+        }
+
+        document.addEventListener('click', (event) => {
+            if (filterOptionsPopoverAuditLogs && !filterOptionsPopoverAuditLogs.contains(event.target) && event.target !== filterToggleButtonAuditLogs && !monthFilterDropdownAuditLogs.contains(event.target) && !yearFilterDropdownAuditLogs.contains(event.target) && !userFilterDropdownAuditLogs.contains(event.target)) {
+                filterOptionsPopoverAuditLogs.classList.remove('active');
+            }
+
+            if (monthFilterDropdownAuditLogs && !monthFilterDropdownAuditLogs.contains(event.target) && event.target !== filterToggleButtonAuditLogs && !filterOptionsPopoverAuditLogs.contains(event.target)) {
+                monthFilterDropdownAuditLogs.classList.remove('active');
+            }
+            
+            if (yearFilterDropdownAuditLogs && !yearFilterDropdownAuditLogs.contains(event.target) && event.target !== filterToggleButtonAuditLogs && !filterOptionsPopoverAuditLogs.contains(event.target)) {
+                yearFilterDropdownAuditLogs.classList.remove('active');
+            }
+            
+            if (userFilterDropdownAuditLogs && !userFilterDropdownAuditLogs.contains(event.target) && event.target !== filterToggleButtonAuditLogs && !filterOptionsPopoverAuditLogs.contains(event.target)) {
+                userFilterDropdownAuditLogs.classList.remove('active');
+            }
+        });
+
+        // Populate Month Dropdown
+        function populateMonthDropdown() {
+            if (!monthFilterContentAuditLogs) return;
+            const months = [
+                { value: '', text: 'All Months' },
+                { value: '1', text: 'January' },
+                { value: '2', text: 'February' },
+                { value: '3', text: 'March' },
+                { value: '4', text: 'April' },
+                { value: '5', text: 'May' },
+                { value: '6', text: 'June' },
+                { value: '7', text: 'July' },
+                { value: '8', text: 'August' },
+                { value: '9', text: 'September' },
+                { value: '10', text: 'October' },
+                { value: '11', text: 'November' },
+                { value: '12', text: 'December' }
+            ];
+
+            monthFilterContentAuditLogs.innerHTML = '';
+            months.forEach(month => {
+                const span = document.createElement('span');
+                span.classList.add('filter-option');
+                span.dataset.value = month.value;
+                span.textContent = month.text;
+                monthFilterContentAuditLogs.appendChild(span);
+            });
+
+            monthFilterContentAuditLogs.querySelectorAll('.filter-option').forEach(option => {
+                option.addEventListener('click', (e) => {
+                    const value = option.dataset.value;
+                    const text = option.textContent;
+                    if (monthFilterSelectedValueAuditLogs) monthFilterSelectedValueAuditLogs.textContent = text;
+                    currentAuditLogsFilters.month = value;
+                    if (monthFilterDropdownAuditLogs) monthFilterDropdownAuditLogs.classList.remove('active');
+                    e.stopPropagation();
+                });
+            });
+        }
+
+        // Populate Year Dropdown
+        function populateYearDropdown() {
+            if (!yearFilterContentAuditLogs) return;
+            const currentYear = new Date().getFullYear();
+            const years = [{ value: '', text: 'All Years' }];
+            for (let i = currentYear - 5; i <= currentYear + 5; i++) { // From 5 years ago to 5 years in future
+                years.push({ value: i.toString(), text: i.toString() });
+            }
+
+            yearFilterContentAuditLogs.innerHTML = '';
+            years.forEach(year => {
+                const span = document.createElement('span');
+                span.classList.add('filter-option');
+                span.dataset.value = year.value;
+                span.textContent = year.text;
+                yearFilterContentAuditLogs.appendChild(span);
+            });
+
+            yearFilterContentAuditLogs.querySelectorAll('.filter-option').forEach(option => {
+                option.addEventListener('click', (e) => {
+                    const value = option.dataset.value;
+                    const text = option.textContent;
+                    if (yearFilterSelectedValueAuditLogs) yearFilterSelectedValueAuditLogs.textContent = text;
+                    currentAuditLogsFilters.year = value;
+                    if (yearFilterDropdownAuditLogs) yearFilterDropdownAuditLogs.classList.remove('active');
+                    e.stopPropagation();
+                });
+            });
+        }
+
+        // Initialize month and year dropdowns
+        populateMonthDropdown();
+        populateYearDropdown();
+
+        if (monthFilterDropdownAuditLogs) {
+            monthFilterDropdownAuditLogs.addEventListener('click', (event) => {
+                monthFilterDropdownAuditLogs.classList.toggle('active');
+                event.stopPropagation(); 
+            });
+        }
+
+        if (yearFilterDropdownAuditLogs) {
+            yearFilterDropdownAuditLogs.addEventListener('click', (event) => {
+                yearFilterDropdownAuditLogs.classList.toggle('active');
+                event.stopPropagation(); 
+            });
+        }
+
+        if (userFilterDropdownAuditLogs) {
+            userFilterDropdownAuditLogs.addEventListener('click', (event) => {
+                userFilterDropdownAuditLogs.classList.toggle('active');
+                event.stopPropagation(); 
+            });
+        }
+
+        userFilterOptionsAuditLogs.forEach(option => {
+            option.addEventListener('click', (e) => {
+                const value = option.dataset.value;
+                const text = option.textContent;
+                if (userFilterSelectedValueAuditLogs) userFilterSelectedValueAuditLogs.textContent = text;
+                currentAuditLogsFilters.user = value;
+                if (userFilterDropdownAuditLogs) userFilterDropdownAuditLogs.classList.remove('active');
+                e.stopPropagation(); 
+            });
+        });
+
+        if (applyFiltersButtonAuditLogs) {
+            applyFiltersButtonAuditLogs.addEventListener('click', () => {
+                renderAuditLogsTable();
+                if (filterOptionsPopoverAuditLogs) filterOptionsPopoverAuditLogs.classList.remove('active');
+            });
+        }
+
+        if (resetButtonLogs) {
+          resetButtonLogs.addEventListener('click', () => {
+              console.log('Reset button for Audit Logs clicked!');
+
+              // 1. Clear the search input field
+              if (auditLogsSearchInput) {
+                  auditLogsSearchInput.value = '';
+              }
+
+              // 2. Reset filters in memory
+              currentAuditLogsFilters.searchTerm = '';
+              currentAuditLogsFilters.month = ''; 
+              currentAuditLogsFilters.year = '';  
+              currentAuditLogsFilters.user = '';
+
+              // 3. Reset filter labels and dataset values
+              if (monthFilterSelectedValueAuditLogs) {
+                  monthFilterSelectedValueAuditLogs.textContent = 'All Months';
+                  monthFilterSelectedValueAuditLogs.dataset.value = '';
+              }
+              if (yearFilterSelectedValueAuditLogs) {
+                  yearFilterSelectedValueAuditLogs.textContent = 'All Years';
+                  yearFilterSelectedValueAuditLogs.dataset.value = '';
+              }
+
+              if (userFilterSelectedValueAuditLogs) {
+                  userFilterSelectedValueAuditLogs.textContent = 'All Users';
+                  userFilterSelectedValueAuditLogs.dataset.value = '';
+              }
+
+              // 4. Reset sorting state (if applicable)
+              if (currentAuditLogsSort) {
+                  currentAuditLogsSort.column = null;
+                  currentAuditLogsSort.direction = 'asc'; 
+              }
+
+              // 5. Clear sort icons
+              if (auditLogsTable) {
+                  auditLogsTable.querySelectorAll('th .sort-icon').forEach(icon => {
+                      icon.classList.remove('asc', 'desc');
+                  });
+              }
+
+              // 6. Hide filter popover
+              if (filterOptionsPopoverAuditLogs) {
+                  filterOptionsPopoverAuditLogs.classList.remove('active');
+              }
+
+              // 7. Re-render
+              renderAuditLogsTable();
+
+              console.log('Audit logs search, filters, and sorting have been reset.');
+          });
+      }
+
+        auditLogsHeaders.forEach(header => {
+            header.addEventListener('click', () => {
+                const column = header.dataset.column;
+                if (currentAuditLogsSort.column === column) {
+                    currentAuditLogsSort.direction = currentAuditLogsSort.direction === 'asc' ? 'desc' : 'asc';
+                } else {
+                    currentAuditLogsSort.column = column;
+                    currentAuditLogsSort.direction = 'asc';
+                }
+                renderAuditLogsTable();
+            });
+        });
+
+        // Initial render of audit logs table (will be empty until data is fetched)
+        renderAuditLogsTable();
+
+        let employees = [];
+
+        if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run.withSuccessHandler(function (data) {
+                console.log("Frontend: Raw data received from getEmployeesData:", data); 
+                if (Array.isArray(data)) {
+                    employees = data;
+                    console.log("Frontend: Employees data successfully set for autocomplete:", employees);
+                    initAutocomplete();
+                } else {
+                    console.error("Frontend: Data received from getEmployeesData is not an array. It is:", data);
+                    employees = []; 
+                }
+            }).getEmployeesData();
+        } else {
+            console.warn("google.script.run is not available. Cannot fetch employee data for autocomplete.");
+        }
+
+
+        function initAutocomplete() {
+            const nameInput = document.getElementById('fullName');
+            console.log("Frontend: initAutocomplete called. nameInput element:", nameInput); 
+            if (!nameInput) {
+                console.error("Frontend: 'fullName' input element not found. Autocomplete cannot be initialized.");
+                return; 
+            }
+
+            nameInput.addEventListener('input', function () {
+                if (!Array.isArray(employees)) {
+                    console.error("Frontend: 'employees' is not an array. It is:", employees);
+                    return;
+                }
+
+                const value = this.value.toLowerCase();
+                const suggestions = employees.filter(emp =>
+                    emp.fullName.toLowerCase().includes(value)
+                );
+                console.log("Frontend: Autocomplete suggestions:", suggestions); 
+                showSuggestions(suggestions, this);
+            });
+        }
+
+        function showSuggestions(suggestions, inputElement) {
+            let oldDropdown = document.getElementById('autocomplete-list');
+            if (oldDropdown) oldDropdown.remove();
+
+            if (suggestions.length === 0) return; 
+
+            const dropdown = document.createElement('div');
+            dropdown.setAttribute('id', 'autocomplete-list');
+            dropdown.setAttribute('class', 'autocomplete-items');
+            dropdown.style.position = 'absolute';
+            dropdown.style.border = '1px solid #d4d4d4'; 
+            dropdown.style.borderTop = 'none';
+            dropdown.style.zIndex = '1000';
+            dropdown.style.backgroundColor = '#fff';
+            dropdown.style.width = inputElement.offsetWidth + 'px';
+            dropdown.style.maxHeight = '200px';
+            dropdown.style.overflowY = 'auto';
+            dropdown.style.borderRadius = '0 0 0.5rem 0.5rem'; 
+
+            const inputRect = inputElement.getBoundingClientRect();
+            dropdown.style.top = (inputRect.bottom + window.scrollY) + 'px';
+            dropdown.style.left = (inputRect.left + window.scrollX) + 'px';
+
+
+            suggestions.forEach(emp => {
+                const item = document.createElement('div');
+                item.innerHTML = `<strong>${emp.fullName}</strong><br><small>${emp.employeeNumber} - ${emp.department}</small>`;
+                item.style.padding = '10px';
+                item.style.cursor = 'pointer';
+
+                item.addEventListener('click', function () {
+                    inputElement.value = emp.fullName;
+                    const employeeNumberInput = document.getElementById('employeeNumber');
+                    const departmentInput = document.getElementById('department');
+                    if (employeeNumberInput) employeeNumberInput.value = emp.employeeNumber;
+                    if (departmentInput) departmentInput.value = emp.department;
+
+                    dropdown.remove();
+                });
+
+                dropdown.appendChild(item);
+            });
+
+            if (inputElement.parentNode) {
+                document.body.appendChild(dropdown);
+            }
+        }
+
+        document.addEventListener('click', function (e) {
+            let dropdown = document.getElementById('autocomplete-list');
+            if (dropdown && !dropdown.contains(e.target) && e.target.id !== 'fullName') {
+                dropdown.remove();
+            }
+        });
+
+        function clearLeaveRequestForm() {
+            const form = document.getElementById("leaveRequestForm");
+
+            if (form) {
+                const fieldsToPreserve = ['to', 'thru', 'date'];
+                Array.from(form.elements).forEach(el => {
+                    if (!fieldsToPreserve.includes(el.id)) {
+                        if (el.type === 'text' || el.tagName === 'TEXTAREA' || el.tagName === 'SELECT' || el.type === 'date') {
+                            el.value = '';
+                        }
+                    }
+                });
+
+                const leaveTypeSelect = document.getElementById("leaveType");
+                const leaveDurationSelect = document.getElementById("leaveDuration");
+                if (leaveTypeSelect) leaveTypeSelect.selectedIndex = 0;
+                if (leaveDurationSelect) leaveDurationSelect.selectedIndex = 0;
+            }
+        }
+
+        /* Force Leave */
+        
+        /* Force Leave Modal */
+        const forceLeaveModal = document.getElementById('forceLeaveModal');
+        const addForceLeaveNameBtn = document.getElementById('addForceLeaveNameBtn');
+        const clearForceLeaveNameBtn = document.getElementById('clearForceLeaveNameBtn');
+        const cancelForceLeaveModal = document.getElementById('cancelForceLeaveModal');
+        const confirmForceLeaveModal = document.getElementById('confirmForceLeaveModal');
+        const closeForceLeaveModalBtn = document.getElementById('closeForceLeaveModalBtn');
+        const addForceLeaveForm = document.getElementById('addForceLeaveForm');
+        const employeeNameInput = document.getElementById('employeeNameInput');
+        const departmentSelect = document.getElementById('departmentSelect');
+        const employeeScopeSelect = document.getElementById('employeeScopeSelect');
+        const employeeNameError = document.getElementById('employeeNameError');
+        const confirmedForceLeaveNamesTableBody = document.querySelector('#confirmedForceLeaveNamesTable tbody');
+        const previewForceLeaveNamesTableBody = document.querySelector('#previewForceLeaveNamesTable tbody');
+        const employeeNameList = document.getElementById('employeeNameList');
+        const employeeNameDropdown = document.getElementById('employeeNameDropdown');
+        const confirmationModal = document.getElementById('confirmationModal');
+        const confirmationMessage = document.getElementById('confirmationMessage');
+        const confirmYesBtn = document.getElementById('confirmYesBtn');
+        const confirmNoBtn = document.getElementById('confirmNoBtn');
+        let forceLeaveEmployees = []; 
+        let employeeCounter = 1; 
+        let employeeData = []; 
+        let selectedEmployeeIndex = null; 
+        let selectedEmployeesForAll = [];
+        let allForceLeaveHistoryData = [];
+        let isForceLeaveEmployeeSelectedFromAutocomplete = false;
+        
+
+        // Function to show the modal
+        function showForceLeaveModal() {
+            if (forceLeaveModal) {
+                forceLeaveModal.style.display = 'flex';
+                if (departmentSelect) departmentSelect.selectedIndex = 0;
+                if (employeeScopeSelect) employeeScopeSelect.selectedIndex = 0;
+                if (employeeNameInput) {
+                    employeeNameInput.value = '';
+                    employeeNameInput.disabled = true;
+                    isForceLeaveEmployeeSelectedFromAutocomplete = false; 
+                }
+                if (employeeNameError) employeeNameError.style.display = 'none';
+                if (employeeNameList) employeeNameList.innerHTML = '';
+                selectedEmployeesForAll = []; 
+                updatePreviewTable('', '');
+                fetchEmployeeData();
+            }
+        }
+        
+        function hideForceLeaveModal() {
+            if (forceLeaveModal) {
+                forceLeaveModal.style.display = 'none';
+                if (addForceLeaveForm) addForceLeaveForm.reset();
+                if (employeeNameInput) {
+                    employeeNameInput.value = '';
+                    employeeNameInput.disabled = true;
+                    isForceLeaveEmployeeSelectedFromAutocomplete = false; 
+                }
+                if (employeeNameDropdown) {
+                    employeeNameDropdown.innerHTML = '';
+                    employeeNameDropdown.style.display = 'none';
+                }
+                if (employeeNameError) employeeNameError.style.display = 'none';
+                selectedEmployeesForAll = [];
+                updatePreviewTable('', '');
+                renderConfirmedForceLeaveTable();
+            }
+        }
+
+
+        function showConfirmBox(message, onConfirm, onCancel = () => {}) {
+          confirmationMessage.textContent = message;
+          confirmationModal.style.display = 'flex'; 
+
+          const handleYes = () => {
+              confirmationModal.style.display = 'none'; 
+              onConfirm(); 
+              confirmYesBtn.removeEventListener('click', handleYes);
+              confirmNoBtn.removeEventListener('click', handleNo);
+          };
+
+          const handleNo = () => {
+              confirmationModal.style.display = 'none'; 
+              onCancel(); 
+              confirmYesBtn.removeEventListener('click', handleYes);
+              confirmNoBtn.removeEventListener('click', handleNo);
+          };
+          confirmYesBtn.addEventListener('click', handleYes);
+          confirmNoBtn.addEventListener('click', handleNo);
+      }
+
+      function validateEmployeeName(name, scope, department) {
+    if (scope === 'Specific') {
+        if (!name.trim()) {
+            if (employeeNameError) {
+                employeeNameError.textContent = 'Employee name is required.';
+                employeeNameError.style.display = 'block';
+            }
+            return false;
+        }
+
+        if (!isForceLeaveEmployeeSelectedFromAutocomplete) {
+                const isValidExactMatch = employeeData.some(
+                    emp => emp.name.toLowerCase() === name.toLowerCase() && emp.department === department
+                );
+                if (!isValidExactMatch) {
+                    if (employeeNameError) {
+                        employeeNameError.textContent = 'Employee name must match an existing employee in the selected department. Please select from the list or type an exact match.';
+                        employeeNameError.style.display = 'block';
+                    }
+                    return false;
+                }
+            }
+        const isValid = employeeData.some(
+            emp => emp.name.toLowerCase() === name.toLowerCase() && emp.department === department
+        );
+        if (!isValid) {
+            if (employeeNameError) {
+                employeeNameError.textContent = 'Employee not found in the selected department.';
+                employeeNameError.style.display = 'block';
+            }
+            return false;
+        }
+        if (forceLeaveEmployees.some(emp => emp.name.toLowerCase() === name.toLowerCase() && emp.scope === 'Specific')) {
+            if (employeeNameError) {
+                employeeNameError.textContent = 'This employee is already added.';
+                employeeNameError.style.display = 'block';
+            }
+            return false;
+        }
+    }
+    if (employeeNameError) employeeNameError.style.display = 'none';
+    return true;
+}
+
+      function renderConfirmedForceLeaveTable() {
+    if (!confirmedForceLeaveNamesTableBody) {
+        console.error('confirmedForceLeaveNamesTableBody not found');
+        return;
+    }
+    console.log('renderConfirmedForceLeaveTable called, forceLeaveEmployees:', forceLeaveEmployees);
+    confirmedForceLeaveNamesTableBody.innerHTML = '';
+    if (forceLeaveEmployees.length === 0) {
+        selectedEmployeeIndex = null;
+        return;
+    }
+    forceLeaveEmployees.forEach((emp, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${emp.name}</td>
+            <td>${emp.department}</td>
+        `;
+        row.addEventListener('click', () => {
+            const rows = confirmedForceLeaveNamesTableBody.querySelectorAll('tr');
+            rows.forEach(r => r.classList.remove('selected'));
+            row.classList.add('selected');
+            selectedEmployeeIndex = index;
+            console.log('Selected employee index:', selectedEmployeeIndex);
+        });
+        confirmedForceLeaveNamesTableBody.appendChild(row);
+    });
+}
+
+
+function fetchEmployeeData() {
+    return new Promise((resolve, reject) => {
+        google.script.run
+            .withSuccessHandler(data => {
+                employeeData = data.map(emp => ({
+                    name: emp.fullName,
+                    department: emp.department
+                }));
+                console.log('Fetched employee data:', employeeData);
+                resolve(employeeData);
+            })
+            .withFailureHandler(error => {
+                console.error('Error fetching employee data from Google Apps Script:', error);
+                showMessageBox('Error fetching employee data. Please try again.', 'error');
+                reject(error);
+            })
+            .getEmployeesData();
+    });
+}
+
+
+function updateEmployeeNameList(selectedDepartment) {
+    if (!employeeNameDropdown || !employeeNameInput) return;
+    employeeNameDropdown.innerHTML = '';
+    employeeNameDropdown.style.display = 'none';
+    const inputValue = employeeNameInput.value.trim().toLowerCase();
+    const filteredEmployees = employeeData.filter(
+        emp => emp.department === selectedDepartment && emp.name.toLowerCase().includes(inputValue)
+    );
+    if (filteredEmployees.length === 0) {
+        employeeNameDropdown.innerHTML = '<div class="autocomplete-item no-results">No matching employees</div>';
+    } else {
+        filteredEmployees.forEach(emp => {
+            const item = document.createElement('div');
+            item.classList.add('autocomplete-item');
+            item.textContent = emp.name;
+            item.addEventListener('click', () => {
+                employeeNameInput.value = emp.name;
+                employeeNameDropdown.innerHTML = '';
+                employeeNameDropdown.style.display = 'none';
+                updatePreviewTable('Specific', departmentSelect.value, employeeNameInput.value);
+                isForceLeaveEmployeeSelectedFromAutocomplete = true; 
+            });
+            employeeNameDropdown.appendChild(item);
+        });
+    }
+    if (inputValue || filteredEmployees.length > 0) {
+        employeeNameDropdown.style.display = 'block';
+    }
+}
+
+function updatePreviewTable(scope, department, employeeName = '') {
+    if (!previewForceLeaveNamesTableBody) return;
+    previewForceLeaveNamesTableBody.innerHTML = '';
+    if (scope === 'All' && department) {
+        const filteredEmployees = employeeData.filter(emp => emp.department === department);
+        if (filteredEmployees.length === 0) {
+            previewForceLeaveNamesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">No employees found for this department.</td></tr>';
+        } else {
+            selectedEmployeesForAll = filteredEmployees.map(emp => ({ ...emp, checked: true })); 
+            filteredEmployees.forEach((emp, index) => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td>${emp.name}</td>
+                    <td>${emp.department}</td>
+                    <td><input type="checkbox" class="employee-checkbox" data-index="${index}" ${selectedEmployeesForAll[index].checked ? 'checked' : ''}></td> <!-- NEW: Checkbox column -->
+                `;
+                previewForceLeaveNamesTableBody.appendChild(row);
+            });
+            const checkboxes = previewForceLeaveNamesTableBody.querySelectorAll('.employee-checkbox');
+            checkboxes.forEach(checkbox => {
+                checkbox.addEventListener('change', (e) => {
+                    const index = parseInt(e.target.dataset.index);
+                    selectedEmployeesForAll[index].checked = e.target.checked;
+                    console.log('Updated checked employees:', selectedEmployeesForAll);
+                });
+            });
+        }
+    } else if (scope === 'Specific' && employeeName && department) {
+        const isValidEmployee = employeeData.some(
+            emp => emp.name.toLowerCase() === employeeName.toLowerCase() && emp.department === department
+        );
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>1</td>
+            <td>${isValidEmployee ? employeeName : 'Invalid employee name'}</td>
+            <td>${department}</td>
+            <td></td> <!-- NEW: Empty checkbox column for Specific -->
+        `;
+        previewForceLeaveNamesTableBody.appendChild(row);
+    } else {
+        previewForceLeaveNamesTableBody.innerHTML = '<tr><td colspan="4" class="text-center py-4">Select a department and scope to view employees.</td></tr>';
+    }
+}
+
+        
+function logUserAction(action, role) {
+            if ((role === 'hr_admin' || role === 'mis_admin') && typeof google !== 'undefined' && google.script && google.script.run && currentUserEmail) {
+                google.script.run.withSuccessHandler(function() {
+                    console.log(`Audit Log successful for action: "${action}" by ${currentUserEmail} (${role})`);
+                }).withFailureHandler(function(error) {
+                    console.error(`Error logging audit action "${action}" for ${currentUserEmail}:`, error.message);
+                }).addAuditLog(action, currentUserEmail);
+            } else {
+                console.warn(`google.script.run is not available or currentUserEmail is empty. Cannot log action: ${action}`);
+            }
+        }
+
+        if (editForceLeaveNameBtn) {
+            editForceLeaveNameBtn.addEventListener('click', () => {
+                if (selectedEmployeeIndex === null) {
+                    showMessageBox('Please select an employee to delete by clicking a row.', 'error');
+                    return;
+                }
+                const deletedEmployee = forceLeaveEmployees[selectedEmployeeIndex];
+                forceLeaveEmployees.splice(selectedEmployeeIndex, 1); 
+                selectedEmployeeIndex = null; 
+                renderConfirmedForceLeaveTable();
+                const action = `Deleted employee "${deletedEmployee.name}" (Department: ${deletedEmployee.department}, Scope: ${deletedEmployee.scope}) from Force Leave`;
+                logUserAction(action, currentUserRole); 
+                google.script.run.addAuditLog(action, currentUserEmail);
+                showMessageBox(`Employee "${deletedEmployee.name}" deleted successfully!`, 'success');
+            });
+        }
+
+    if (employeeScopeSelect) {
+    employeeScopeSelect.addEventListener('change', () => {
+        if (employeeNameInput) {
+            employeeNameInput.disabled = employeeScopeSelect.value !== 'Specific';
+            employeeNameInput.value = '';
+            isForceLeaveEmployeeSelectedFromAutocomplete = false; 
+            if (employeeNameError) employeeNameError.style.display = 'none';
+            if (employeeScopeSelect.value === 'Specific' && departmentSelect.value) {
+                updateEmployeeNameList(departmentSelect.value);
+                employeeNameInput.focus();
+            } else {
+                if (employeeNameList) employeeNameList.innerHTML = '';
+            }
+            updatePreviewTable(employeeScopeSelect.value, departmentSelect.value, employeeNameInput.value);
+        }
+    });
+}
+
+if (employeeNameInput) {
+    employeeNameInput.addEventListener('input', () => {
+        isForceLeaveEmployeeSelectedFromAutocomplete = false; 
+        if (employeeScopeSelect.value === 'Specific' && departmentSelect.value) {
+            updateEmployeeNameList(departmentSelect.value);
+            updatePreviewTable('Specific', departmentSelect.value, employeeNameInput.value);
+        } else {
+            if (employeeNameDropdown) {
+                employeeNameDropdown.innerHTML = '';
+                employeeNameDropdown.style.display = 'none';
+            }
+        }
+    });
+}
+document.addEventListener('click', (e) => {
+    if (employeeNameDropdown && !employeeNameInput.contains(e.target) && !employeeNameDropdown.contains(e.target)) {
+        employeeNameDropdown.style.display = 'none';
+    }
+});
+
+      if (addForceLeaveNameBtn) {
+        addForceLeaveNameBtn.addEventListener('click', showForceLeaveModal);
+      }
+      
+
+     if (cancelForceLeaveModal) {
+    cancelForceLeaveModal.addEventListener('click', () => {
+        hideForceLeaveModal();
+        google.script.run.addAuditLog('Cancelled adding employee to Force Leave', currentUserEmail); 
+    });
+}
+if (closeForceLeaveModalBtn) {
+    closeForceLeaveModalBtn.addEventListener('click', () => {
+        hideForceLeaveModal();
+        google.script.run.addAuditLog('Closed Force Leave modal', currentUserEmail); 
+    });
+}
+if (forceLeaveModal) {
+    window.addEventListener('click', (event) => {
+        if (event.target === forceLeaveModal) {
+            hideForceLeaveModal();
+            google.script.run.addAuditLog('Closed Force Leave modal by clicking outside', currentUserEmail); 
+        }
+    });
+}
+
+
+      if (addForceLeaveForm) {
+    addForceLeaveForm.addEventListener('submit', (event) => {
+        event.preventDefault();
+        const name = employeeNameInput ? employeeNameInput.value.trim() : '';
+        const department = departmentSelect ? departmentSelect.value : '';
+        const scope = employeeScopeSelect ? employeeScopeSelect.value : '';
+
+        if (!department) {
+            showMessageBox('Please select a department.', 'error');
+            return;
+        }
+        if (!scope) {
+            showMessageBox('Please select a scope (All or Specific).', 'error');
+            return;
+        }
+        if (scope === 'Specific' && !validateEmployeeName(name, scope, department)) {
+            return;
+        }
+        if (scope === 'All' && selectedEmployeesForAll.length === 0) {
+            showMessageBox('No employees selected. Please check at least one employee.', 'error');
+            return;
+        }
+
+        let addedEmployees = [];
+        if (scope === 'All') {
+            addedEmployees = selectedEmployeesForAll
+                .filter(emp => emp.checked)
+                .map(emp => ({
+                    name: emp.name,
+                    department: department,
+                    scope: scope
+                }));
+            if (addedEmployees.length === 0) {
+                showMessageBox('No employees selected. Please check at least one employee.', 'error');
+                return;
+            }
+            const duplicates = addedEmployees.filter(emp =>
+                forceLeaveEmployees.some(existing =>
+                    existing.name.toLowerCase() === emp.name.toLowerCase() &&
+                    existing.department === emp.department &&
+                    existing.scope === 'All'
+                )
+            );
+            if (duplicates.length > 0) {
+                showMessageBox('Some employees are already added.', 'error');
+                return;
+            }
+            forceLeaveEmployees.push(...addedEmployees);
+            employeeCounter += addedEmployees.length;
+        } else {
+            const employeeEntry = {
+                name: name,
+                department: department,
+                scope: scope
+            };
+            addedEmployees = [employeeEntry];
+            forceLeaveEmployees.push(employeeEntry);
+            employeeCounter++;
+        }
+
+        renderConfirmedForceLeaveTable();
+        const action = `Added ${scope === 'All' ? `${addedEmployees.length} employees` : `employee "${name}"`} (Department: ${department}, Scope: ${scope}) to Force Leave`;
+        logUserAction(action, currentUserRole); 
+        google.script.run.addAuditLog(action, currentUserEmail); 
+
+        hideForceLeaveModal();
+        showMessageBox(`${scope === 'All' ? `${addedEmployees.length} employees` : `Employee "${name}"`} added successfully!`, 'success');
+    });
+}
+
+if (departmentSelect) {
+    departmentSelect.addEventListener('change', () => {
+        const selectedDepartment = departmentSelect.value;
+        if (selectedDepartment && employeeScopeSelect.value === 'Specific') {
+            updateEmployeeNameList(selectedDepartment);
+        } else {
+            if (employeeNameDropdown) {
+                employeeNameDropdown.innerHTML = '';
+                employeeNameDropdown.style.display = 'none';
+            }
+        }
+        selectedEmployeesForAll = [];
+        updatePreviewTable(employeeScopeSelect.value, selectedDepartment, employeeNameInput.value);
+    });
+}
+
+      // Force Leave Form Logic
+      const forceLeaveForm = document.getElementById('forceLeaveForm');
+      const startDateInput = document.getElementById('startDateInput');
+      const endDateInput = document.getElementById('endDateInput');
+      const startDateError = document.getElementById('startDateError');
+      const endDateError = document.getElementById('endDateError');
+      const submitForceLeaveForm = document.getElementById('submitForceLeaveForm');
+
+
+      function validateForceLeaveForm(startDate, endDate) {
+          let isValid = true;
+
+          if (startDateError) startDateError.style.display = 'none';
+          if (endDateError) endDateError.style.display = 'none';
+
+          if (!startDate) {
+              if (startDateError) {
+                  startDateError.textContent = 'Start Date is required.';
+                  startDateError.style.display = 'block';
+              }
+              isValid = false;
+          }
+
+          if (!endDate) {
+              if (endDateError) {
+                  endDateError.textContent = 'End Date is required.';
+                  endDateError.style.display = 'block';
+              }
+              isValid = false;
+          }
+
+          if (startDate && endDate && new Date(endDate) < new Date(startDate)) {
+              if (endDateError) {
+                  endDateError.textContent = 'End Date cannot be before Start Date.';
+                  endDateError.style.display = 'block';
+              }
+              isValid = false;
+          }
+
+          return isValid;
+      }
+
+if (submitForceLeaveForm) {
+  submitForceLeaveForm.addEventListener('click', () => {
+    const startDate = startDateInput.value;
+    const endDate = endDateInput.value;
+    const duration = document.getElementById('forceLeaveDuration').value;
+
+    const scope = employeeScopeSelect ? employeeScopeSelect.value : '';
+
+    if (!validateForceLeaveForm(startDate, endDate)) {
+      return;
+    }
+
+    const loadingOverlay = document.getElementById('loadingOverlay');
+    if (loadingOverlay) {
+        loadingOverlay.style.opacity = "0";
+        loadingOverlay.style.display = "flex";
+        void loadingOverlay.offsetWidth; 
+        loadingOverlay.style.opacity = "1";
+    }
+
+    google.script.run
+      .withSuccessHandler((response) => { 
+        // Hide loading overlay
+        if (loadingOverlay) {
+            loadingOverlay.style.opacity = "0";
+            setTimeout(() => {
+                loadingOverlay.style.display = "none";
+            }, 300);
+        }
+
+        if (response.success) { 
+            showMessageBox('Force leave submitted and balances updated successfully!', 'success');
+
+            const confirmedTableBody = document.querySelector('#confirmedForceLeaveNamesTable tbody');
+            if (confirmedTableBody) {
+                confirmedTableBody.innerHTML = '';
+            }
+            forceLeaveEmployees = [];
+            forceLeaveForm.reset();
+            fetchAndRenderEmployeeBalanceData();
+        } else {
+            showMessageBox(`Error submitting force leave: ${response.message}`, 'error');
+        }
+      })
+      .withFailureHandler(error => {
+        // Hide loading overlay
+        if (loadingOverlay) {
+            loadingOverlay.style.opacity = "0";
+            setTimeout(() => {
+                loadingOverlay.style.display = "none";
+            }, 300);
+        }
+        console.error('Error saving data:', error);
+        showMessageBox(`Error saving data: ${error.message}`, 'error');
+      })
+      .saveForceLeaveData(scope, forceLeaveEmployees, startDate, endDate, duration);
+
+    logUserAction(`Submitted Force Leave form with ${forceLeaveEmployees.length} employees`, currentUserRole);
+  });
+}
+
+        /* Force Leave History */
+        const forceLeaveHistoryModal = document.getElementById('forceLeaveHistoryModal'); 
+        const closeForceLeaveHistoryModalBtn = document.getElementById('closeForceLeaveHistoryModalBtn');
+        const forceLeaveHistoryTableBody = document.querySelector('#forceLeaveHistoryTable tbody');
+        const exportForceLeaveHistoryBtn = document.getElementById('exportForceLeaveHistoryBtn');
+        const departmentFilterSelect = document.getElementById('departmentFilterSelect'); 
+
+        const forceLeaveHistoryLoading = document.getElementById('forceLeaveHistoryLoading');
+        const monthFilterSelect = document.getElementById('monthFilterSelect');
+        const yearFilterSelect = document.getElementById('yearFilterSelect');
+
+        const forceLeaveHistoryBtn = document.getElementById('forceLeaveHistoryBtn');
+if (forceLeaveHistoryBtn) {
+    forceLeaveHistoryBtn.addEventListener('click', () => {
+        console.log("Force Leave History button clicked.");
+
+        if (forceLeaveHistoryModal) {
+            forceLeaveHistoryModal.style.display = 'flex';
+            google.script.run.addAuditLog('Opened Force Leave History modal', currentUserEmail);
+        }
+
+        if (forceLeaveHistoryLoading) {
+            forceLeaveHistoryLoading.style.display = 'flex';
+        }
+        if (forceLeaveHistoryTableBody) {
+            forceLeaveHistoryTableBody.innerHTML = '';
+        }
+
+        if (departmentFilterSelect) {
+            departmentFilterSelect.innerHTML = '<option value="all">Loading...</option>';
+            departmentFilterSelect.disabled = true;
+        }
+        if (monthFilterSelect) {
+            monthFilterSelect.disabled = true;
+        }
+        if (yearFilterSelect) {
+            yearFilterSelect.innerHTML = '<option value="all">Loading...</option>';
+            yearFilterSelect.disabled = true;
+        }
+        if (exportForceLeaveHistoryBtn) {
+            exportForceLeaveHistoryBtn.disabled = true;
+        }
+
+        google.script.run
+            .withSuccessHandler(data => {
+                console.log("Force Leave History data fetched:", data);
+
+                if (forceLeaveHistoryLoading) {
+                    forceLeaveHistoryLoading.style.display = 'none';
+                }
+
+                // Enable filters and export button
+                if (departmentFilterSelect) {
+                    departmentFilterSelect.disabled = false;
+                }
+                if (monthFilterSelect) {
+                    monthFilterSelect.disabled = false;
+                }
+                if (yearFilterSelect) {
+                    yearFilterSelect.disabled = false;
+                }
+                if (exportForceLeaveHistoryBtn) {
+                    exportForceLeaveHistoryBtn.disabled = false;
+                }
+
+                allForceLeaveHistoryData = data;
+                populateDepartmentFilter(data);
+                populateYearFilter(data); 
+
+                // Apply initial filters (all)
+                filterForceLeaveHistoryTable();
+            })
+            .withFailureHandler(error => {
+                console.error('Error fetching force leave history:', error);
+                showMessageBox('Error fetching force leave history. Please try again.', 'error');
+                google.script.run.addAuditLog(`Failed to open Force Leave History modal: ${error.message}`, currentUserEmail);
+
+                if (forceLeaveHistoryLoading) {
+                    forceLeaveHistoryLoading.style.display = 'none';
+                }
+                if (departmentFilterSelect) {
+                    departmentFilterSelect.disabled = false;
+                }
+                if (monthFilterSelect) {
+                    monthFilterSelect.disabled = false;
+                }
+                if (yearFilterSelect) {
+                    yearFilterSelect.disabled = false;
+                }
+                if (exportForceLeaveHistoryBtn) {
+                    exportForceLeaveHistoryBtn.disabled = false;
+                }
+                if (forceLeaveHistoryModal) {
+                    forceLeaveHistoryModal.style.display = 'none';
+                }
+            })
+            .getForceLeaveHistoryData();
+    });
+}
+// Event listener for closing the Force Leave History modal using the 'x' button
+if (closeForceLeaveHistoryModalBtn) {
+    closeForceLeaveHistoryModalBtn.addEventListener('click', () => {
+        if (forceLeaveHistoryModal) {
+            forceLeaveHistoryModal.style.display = 'none'; 
+            google.script.run.addAuditLog('Closed Force Leave History Modal', currentUserEmail);
+        }
+    });
+}
+
+// Event listener to close modal if clicked outside (ONLY KEEP ONE OF THESE)
+if (forceLeaveHistoryModal) {
+    window.addEventListener('click', (event) => {
+        if (event.target === forceLeaveHistoryModal) {
+            forceLeaveHistoryModal.style.display = 'none'; 
+            google.script.run.addAuditLog('Closed Force Leave History Modal by clicking outside', currentUserEmail);
+        }
+    });
+}
+
+
+// Function to render the force leave history table (ensure this is present and correct)
+function renderForceLeaveHistoryTable(data) {
+    if (!forceLeaveHistoryTableBody) {
+        console.error('forceLeaveHistoryTableBody not found');
+        return;
+    }
+
+    forceLeaveHistoryTableBody.innerHTML = ''; 
+
+    if (data.length === 0) {
+        forceLeaveHistoryTableBody.innerHTML = '<tr><td colspan="8" class="text-center py-4">No force leave history found.</td></tr>';
+        return;
+    }
+
+    data.forEach((entry, index) => {
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${entry.dateSubmitted}</td>
+            <td>${entry.employeeName}</td> <td>${entry.department}</td>
+            <td>${entry.duration}</td>
+            <td>${entry.startDate}</td>
+            <td>${entry.endDate}</td> `;
+             
+        forceLeaveHistoryTableBody.appendChild(row);
+    });
+}
+
+
+function populateDepartmentFilter(data) {
+            if (!departmentFilterSelect) {
+                console.error("Department filter select element not found.");
+                return;
+            }
+
+            // Clear existing options, keeping only the "All Departments" option
+            departmentFilterSelect.innerHTML = '<option value="all">All Departments</option>';
+
+            const departments = new Set(); 
+            data.forEach(entry => {
+                if (entry.department && entry.department !== "") {
+                    departments.add(entry.department);
+                }
+            });
+
+            // Sort departments alphabetically
+            const sortedDepartments = Array.from(departments).sort();
+
+            // Add each unique department as an option
+            sortedDepartments.forEach(department => {
+                const option = document.createElement('option');
+                option.value = department;
+                option.textContent = department;
+                departmentFilterSelect.appendChild(option);
+            });
+        }
+
+if (departmentFilterSelect) {
+            departmentFilterSelect.addEventListener('change', () => {
+                const selectedDepartment = departmentFilterSelect.value;
+                let filteredData = [];
+
+                if (selectedDepartment === "all") {
+                    filteredData = allForceLeaveHistoryData; 
+                } else {
+                    filteredData = allForceLeaveHistoryData.filter(entry => entry.department === selectedDepartment);
+                }
+                renderForceLeaveHistoryTable(filteredData);
+            });
+        }
+
+
+function populateYearFilter(data) {
+    if (!yearFilterSelect) {
+        console.error("Year filter select element not found.");
+        return;
+    }
+    yearFilterSelect.innerHTML = '<option value="all">All Years</option>'; 
+
+    const years = new Set();
+    data.forEach(entry => {
+        const date = new Date(entry.dateSubmitted);
+        if (!isNaN(date.getTime())) { // Check if date is valid
+            years.add(date.getFullYear().toString());
+        }
+    });
+
+    const sortedYears = Array.from(years).sort((a, b) => b - a); 
+    sortedYears.forEach(year => {
+        const option = document.createElement('option');
+        option.value = year;
+        option.textContent = year;
+        yearFilterSelect.appendChild(option);
+    });
+}
+
+function filterForceLeaveHistoryTable() {
+    const selectedDepartment = departmentFilterSelect ? departmentFilterSelect.value : 'all';
+    const selectedMonth = monthFilterSelect ? monthFilterSelect.value : 'all';
+    const selectedYear = yearFilterSelect ? yearFilterSelect.value : 'all';
+
+    let filteredData = allForceLeaveHistoryData.filter(entry => {
+        const matchesDepartment = selectedDepartment === "all" || entry.department === selectedDepartment;
+
+        let matchesMonth = true;
+        let matchesYear = true;
+
+        if (selectedMonth !== "all" || selectedYear !== "all") {
+            const date = new Date(entry.dateSubmitted);
+            if (!isNaN(date.getTime())) {
+                if (selectedMonth !== "all") {
+                    matchesMonth = (date.getMonth() + 1).toString().padStart(2, '0') === selectedMonth;
+                }
+                if (selectedYear !== "all") {
+                    matchesYear = date.getFullYear().toString() === selectedYear;
+                }
+            } else {
+                matchesMonth = false;
+                matchesYear = false;
+            }
+        }
+        return matchesDepartment && matchesMonth && matchesYear;
+    });
+
+    renderForceLeaveHistoryTable(filteredData);
+}
+
+// Add event listeners for the new month and year filter dropdowns
+if (monthFilterSelect) {
+    monthFilterSelect.addEventListener('change', filterForceLeaveHistoryTable);
+}
+
+if (yearFilterSelect) {
+    yearFilterSelect.addEventListener('change', filterForceLeaveHistoryTable);
+}
+
+// The existing department filter event listener should now also call filterForceLeaveHistoryTable
+if (departmentFilterSelect) {
+    departmentFilterSelect.addEventListener('change', filterForceLeaveHistoryTable);
+}
+
+if (clearForceLeaveNameBtn) {
+    clearForceLeaveNameBtn.addEventListener('click', () => {
+        showConfirmBox('Are you sure you want to clear all force leave entries? This action cannot be undone.', () => {
+            forceLeaveEmployees.length = 0;
+            renderConfirmedForceLeaveTable();
+            const action = `Cleared all force leave entries`;
+            logUserAction(action, currentUserRole);
+            google.script.run.addAuditLog(action, currentUserEmail);
+            showMessageBox('All force leave entries cleared successfully!', 'success');
+        }, () => {
+            showMessageBox('Clear operation cancelled.', 'info');
+        });
+    });
+}
+
+    } catch (error) {
+        console.error("Critical JavaScript error during DOMContentLoaded:", error);
+        showMessageBox(`An unexpected error occurred during page setup: ${error.message}. Please try refreshing.`, 'error');
+    }
+});
+</script>
