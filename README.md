@@ -1,13 +1,26 @@
 # Sick-Vacation-Leave-Tracker
 
-This project was developed as part of an internship at People's Independent Media Inc. – Malaya Business Insight. It was created using Google Apps Script. 
+This project was developed during an internship at People's Independent Media Inc. – Malaya Business Insight. It is a web-based Sick and Vacation Leave Tracker built using Google Apps Script, designed to help HR staff and employees manage and monitor leave balances efficiently.
 
-Developed by: 
-Agmata, Christal Kaye J.
-Chaves, Samantha D. 
-De Roxas, Carnation Jhulia I. 
-Galang, Janelle Carla
-Ramos, Angelo F. 
+🔗 Live Demo
+Access the working system here:
+[Sick-Vacation Leave Tracker](https://script.google.com/macros/s/AKfycbwQMfaNbhJzD-WNz1iLTkpcgCosqNeS5iy_N1z9xpedmeggUo4I28YajhKzIn4L0Puj/exec)
+
+🔐 Test Credentials
+Admin Login
+- Email: hr.malaya@gmail.com
+- Password: HR_Admin@123
+
+Employee Login
+- Email: employee.malaya@gmail.com
+- Password: Employee@123
+
+👨‍💻 Developers
+- Agmata, Christal Kaye J.
+- Chaves, Samantha D.
+- De Roxas, Carnation Jhulia I.
+- Galang, Janelle Carla
+- Ramos, Angelo F.
 
 
 Disclaimer:
