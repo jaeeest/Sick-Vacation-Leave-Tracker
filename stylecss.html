@@ -1,0 +1,4040 @@
+    <style>
+        /* General Body Styles */
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; 
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Login Page Styles */
+        :root {
+            --primary-blue: #0039A0;
+            --secondary-blue: #E2EFFF;
+            --text-dark: #333;
+            --text-light: #666;
+            --border-color: #D3D3D3;
+            --input-bg: #F0F2F5;
+            --error-red: #E74C3C;
+        }
+
+        .login-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            position: fixed; /* To cover the whole screen */
+            top: 0;
+            left: 0;
+            z-index: 2000; /* Ensure it's on top */
+            background-color: #f3f4f6;
+        }
+
+        .login-left-panel {
+            flex: 1;
+            background-color: var(--secondary-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+            color: var(--primary-blue);
+            flex-direction: column;
+        }
+
+        .login-logo-section {
+            max-width: 430px;
+        }
+
+        .login-logo-section img{
+            height: auto;
+            max-width: 100%;
+        }
+
+        .login-tagline-track {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .login-tagline-submit {
+            font-size: 0.9em;
+            line-height: 1.5;
+            color: var(--text-light);
+        }
+
+        .login-right-panel {
+            flex: 1;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .login-form-container {
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+        }
+
+        .login-icon-hand {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .login-welcome-back {
+            font-size: 1.8em;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+        }
+
+        .login-input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .login-input-group label {
+            display: block;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .login-input-with-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .login-input-with-icon input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            background-color: var(--input-bg);
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .login-input-with-icon input:focus {
+            border-color: var(--primary-blue);
+        }
+
+        .login-input-with-icon .info-icon,
+        .login-input-with-icon .toggle-password {
+            position: absolute;
+            right: 15px;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .login-error-message {
+            color: var(--error-red);
+            font-size: 0.85em;
+            margin-top: 5px;
+            min-height: 1.2em;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-blue);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-top: 5px;
+        }
+
+        .login-btn:hover {
+            background-color: #002870;
+        }
+
+        .login-need-help {
+            font-size: 0.9em;
+            color: var(--text-light);
+            margin-top: 25px;
+        }
+
+        .login-contact {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: default;
+        }
+
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .login-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .login-overlay-content {
+            background-color: #fff;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .login-overlay.show .login-overlay-content {
+            transform: translateY(0);
+        }
+
+        .login-overlay-icon {
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-overlay-icon svg {
+            width: 4rem;
+            height: 4rem;
+            color: #ef4444;
+        }
+
+        .login-overlay-text {
+            font-size: 1.25rem;
+            color: #333;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .login-overlay-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .login-overlay-button {
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            background-color: #ef4444; 
+            color: white;
+            border: none;
+        }
+
+        .login-overlay-button.close:hover {
+            background-color: #dc2626;
+            transform: translateY(-2px);
+        }
+        /* End Login Page Styles */
+
+        /* Left Sidebar Styles */
+        .sidebar {
+            width: 18rem;
+            background-color: #eff6ff;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-radius: 0.3rem;
+            margin-left: 1rem;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar .logo-section {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .sidebar .logo-section img {
+            height: 3.5rem;
+            width: auto;
+            border-radius: 0.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .sidebar .profile-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+        .sidebar .profile-avatar {
+            width: 5rem;
+            height: 5rem;
+            background-color: #dbeafe;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .sidebar .profile-avatar svg {
+            width: 3rem;
+            height: 3rem;
+            color: #2563eb;
+        }
+
+        .sidebar .profile-section p:first-of-type {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .sidebar .profile-section p:last-of-type {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar nav li {
+            margin-bottom: 1rem;
+        }
+
+        .sidebar nav a, .sidebar .logout-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            transition: background-color 200ms, color 200ms;
+            text-decoration: none;
+            color: #374151;
+        }
+
+        .sidebar nav a svg, .sidebar .logout-link svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.75rem;
+        }
+
+        .sidebar nav a:hover {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        /* Specific style for the active navigation link */
+        .sidebar nav .active-link {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .sidebar .logout-section {
+            margin-top: 2rem;
+        }
+
+        .sidebar .logout-link {
+            color: #ef4444;
+        }
+
+        .sidebar .logout-link:hover {
+            background-color: #fee2e2;
+        }
+
+        /* Main Content Area Styles */
+        #appContent {
+          display: none; 
+          width: 100%; 
+          display: flex;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .main-content-card {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Styles for the step indicator container */
+        .step-indicator-container {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .step-indicator > div + div {
+            margin-left: 0.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .step-indicator > div + div {
+                margin-left: 1rem;
+            }
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .step-item.active {
+            color: #1d4ed8;
+        }
+
+        .step-circle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 9999px;
+            border: 1px solid currentColor;
+        }
+
+        .step-active .step-circle {
+            background-color: #1d4ed8;
+            color: #fff;
+            border-color: #1d4ed8;
+        }
+
+        .step-inactive .step-circle {
+            background-color: #fff;
+            color: #6b7280;
+            border-color: #d1d5db;
+        }
+
+        .step-text {
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .step-text.md-block {
+                display: block;
+            }
+        }
+
+        .step-line {
+            flex-grow: 1;
+            border-top: 2px dashed #d1d5db;
+            width: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .step-line.md-w-16 {
+                width: 4rem;
+            }
+        }
+
+        /* Styles for the "Leave Request Form" H1 inside the main form card */
+        .main-content-card h1 {
+            font-size: 1.5rem;
+            line-height: 2rem;
+            font-weight: 600;
+            color: #fff;
+            background-color: #1d4ed8;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            width: calc(100% + 3rem);
+            margin-left: -1.5rem;
+            margin-right: -1.5rem;
+            margin-top: -1.5rem;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .main-content-card > h1 + .form-container {
+             margin-top: 1.5rem;
+        }
+
+        /* Form Layout and Elements */
+        .form-container {
+            
+        }
+        .form-container > div + div,
+        .form-container fieldset + fieldset {
+            margin-top: 1.5rem;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .grid-layout.md-cols-2 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .grid-layout.lg-cols-4 {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        textarea,
+        select {
+            margin-top: 0.25rem;
+            margin-bottom: 0.25rem;
+            display: block;
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            padding: 0.5rem;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        textarea:focus,
+        select:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+            border-color: #3b82f6;
+        }
+
+        /* Remove readonly styles to make all inputs appear editable */
+        input[readonly] {
+            background-color: #f9fafb;
+            color: #4b5563;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .required-label::after {
+            content: '*';
+            color: #ef4444;
+            margin-left: 0.25rem;
+        }
+
+        fieldset {
+            border: 1px solid #e5e7eb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        legend {
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+            font-weight: 600;
+            color: #1f2937;
+            padding-left: 0.5rem;
+            margin-left: -0.5rem;
+        }
+
+        .fieldset-content-mt {
+            margin-top: 1rem;
+        }
+
+        .remarks {
+          margin-top: 2rem;
+          margin-bottom: 2rem;
+          padding: 2rem;
+        }
+
+        .relative-input-wrapper {
+            position: relative;
+            margin-top: 0.25rem;
+        }
+
+        .input-icon-wrapper {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            padding-right: 0.75rem;
+            display: flex;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .input-icon-wrapper svg {
+            height: 1.25rem;
+            width: 1.25rem;
+            color: #9ca3af;
+        }
+
+        .flex-input-group {
+            display: flex;
+            margin-top: 0.25rem;
+        }
+
+        .flex-input-group > select + select {
+            margin-left: 0.5rem;
+        }
+
+        .submit-button-container {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 1rem;
+        }
+
+        .submit-button {
+            background-color: #1d4ed8;
+            color: #fff;
+            padding: 0.5rem 1.5rem;
+            font-size: 1.1rem;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: background-color 200ms;
+            border: none;
+            cursor: pointer;
+            margin-top: 3.2rem;
+        }
+
+        .submit-button:hover {
+            background-color: #1e40af;
+        }
+
+        .loading-overlay {
+          display: none; /* ✅ Hidden by default */
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background-color: rgba(0, 0, 0, 0.5);
+          justify-content: center;
+          align-items: center;
+          z-index: 9999;
+      }
+
+      .loader {
+        width: 50px;
+        height: 50px;
+        border: 6px solid #f3f3f3;
+        border-top: 6px solid var(--primary-blue);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+            }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            max-width: 24rem;
+            width: 90%;
+        }
+
+        .modal-icon {
+            color: #22c55e;
+            margin-bottom: 1rem;
+        }
+
+        .modal-icon svg {
+            width: 3rem;
+            height: 3rem;
+            margin: 0 auto;
+        }
+
+        .modal-text {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .modal-button {
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .modal-button.cancel {
+            margin-top: 1.5rem;
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .modal-button.cancel:hover {
+            background-color: #e5e7eb;
+        }
+
+        .modal-button.apply {
+            margin-top: 1.5rem;
+            background-color: #2563eb;
+            color: #fff;
+            border: 1px solid transparent;
+        }
+
+        .modal-button.apply:hover {
+            background-color: #1e40af;
+        }
+
+        /* NEW MEDIA UPLOAD STYLES*/
+        .media-upload-card {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-top: 2rem;
+        }
+
+        .media-upload-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+
+        }
+
+        .media-upload-header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1f2937;
+            padding: 0;
+            background-color: transparent;
+            width: auto;
+            margin: 0;
+            box-shadow: none;
+        }
+
+        .media-upload-info {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+
+        .file-number-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .file-number-group label {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-number-group input[type="text"] {
+            margin-top: 0.25rem;
+            padding: 0.625rem;
+            font-size: 1rem;
+        }
+        .media-drop-area {
+            border: 2px dashed #9ca3af;
+            border-radius: 0.5rem;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            background-color: #f9fafb;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .media-drop-area:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .media-drop-area.highlight {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .media-drop-area .icon-upload {
+            width: 3rem;
+            height: 3rem;
+            margin: 0 auto 1rem;
+            color: #3b82f6
+        }
+
+        .media-drop-area p {
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            text-align: center;
+            position: relative;
+            color: #6b7280;
+        }
+
+        .media-drop-area p strong {
+            font-weight: 600;
+        }
+
+        .media-drop-area .or-divider {
+            margin: 0.5rem 0;
+            color: #9ca3af;
+        }
+
+        .media-drop-area .browse-files-btn {
+            background: none;
+            border: none;
+            color: #2563eb;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .media-drop-area .browse-files-btn:hover {
+            background-color: #e0f2fe;
+        }
+
+        .media-drop-area input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-restrictions {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .media-file-list {
+            margin-top: 1rem;
+        }
+
+        .media-file-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background-color: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .media-file-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            margin-right: 1rem;
+            color: #3b82f6;
+        }
+
+        .media-file-details {
+            flex-grow: 1;
+        }
+
+        .media-file-details .file-name {
+            font-weight: 500;
+            color: #1f2937;
+            font-size: 0.875rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .media-file-details .file-size {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .media-file-progress-bar-container {
+            width: 100%;
+            background-color: #e5e7eb;
+            border-radius: 0.25rem;
+            height: 0.5rem;
+            overflow: hidden;
+            margin-top: 0.25rem;
+        }
+
+        .media-file-progress-bar {
+            height: 100%;
+            background-color: #2563eb;
+            border-radius: 0.25rem;
+            width: 0%;
+            transition: width 0.3s ease-in-out;
+        }
+
+        .media-file-actions {
+            margin-left: 1rem;
+        }
+
+        .media-file-actions .remove-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+        .media-file-actions .remove-btn:hover {
+            color: #dc2626;
+        }
+
+        .media-upload-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .media-upload-buttons .cancel-btn {
+            background-color: #f3f4f6;
+            color: #374151;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 3.2rem;
+        }
+
+        .media-upload-buttons .cancel-btn:hover {
+            background-color: #e5e7eb;
+        }
+
+        .media-upload-buttons .upload-btn {
+            background-color: #2563eb;
+            color: #fff;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 3.2rem;
+        }
+
+        .media-upload-buttons .upload-btn:hover {
+            background-color: #1e40af;
+        }
+
+        /* New styles for Leave History and Employee Balance content cards */
+        .content-card {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-top: 2rem;
+            text-align: center;
+        }
+        .content-card h2 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        .content-card p {
+            font-size: 1rem;
+            color: #4b5563;
+        }
+
+        /* <-------------------HR CSS------------------------> */
+        /* Summary Cards Styles */
+        .summary-cards-container {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr)); /* Default to 1 column */
+            gap: 1.5rem; /* Gap between cards */
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 768px) { /* md breakpoint */
+            .summary-cards-container {
+                grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 columns on medium screens and up */
+            }
+        }
+
+        .summary-card {
+            background-color: #fff; /* bg-white */
+            padding: 1.5rem; /* p-6 */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+            display: flex;
+            align-items: center;
+            gap: 1rem; /* space-x-4 */
+        }
+
+        .summary-card .icon-circle {
+            width: 3rem; /* w-12 */
+            height: 3rem; /* h-12 */
+            border-radius: 9999px; /* rounded-full */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2563eb; /* default icon color */
+        }
+
+        .summary-card .icon-circle svg {
+            width: 1.5rem; /* w-6 */
+            height: 1.5rem; /* h-6 */
+        }
+
+        .summary-card .bg-blue-100 { background-color: #dbeafe; color: #2563eb; }
+        .summary-card .bg-yellow-100 { background-color: #fef9c3; color: #d97706; } /* Example yellow for pending */
+        .summary-card .bg-green-100 { background-color: #dcfce7; color: #16a34a; } /* Example green for requests */
+
+        .summary-card .info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-card .value {
+            font-size: 1.5rem; /* text-2xl */
+            font-weight: 700; /* font-bold */
+            color: #1f2937; /* text-gray-800 */
+        }
+
+        .summary-card .label {
+            font-size: 0.875rem; /* text-sm */
+            color: #6b7280; /* text-gray-500 */
+        }
+
+        /* Search and Filter Section */
+        .search-filter-container {
+            display: flex;
+            gap: 1rem; /* space-x-4 */
+            align-items: center;
+            margin-bottom: 1.5rem; /* mb-6 */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            flex-grow: 1;
+            min-width: 200px; /* Adjust as needed */
+        }
+
+        .search-input {
+            padding: 1rem 1rem 1rem 4rem;
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+            outline: none;
+            font-size: 0.875rem;
+            color: #374151;
+            width: 100%;
+            box-sizing: border-box;
+            padding-left: 2rem;
+        }
+
+        .search-input:focus {
+            border-color: #3b82f6; /* focus:border-blue-500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); /* focus:ring-blue-500 */
+        }
+
+        .search-input-wrapper svg {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.25rem; /* w-5 */
+            height: 1.50rem; /* h-5 */
+            color: #9ca3af; /* text-gray-400 */
+            pointer-events: none;
+        }
+
+        .filter-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem; /* space-x-2 */
+            background-color: #eff6ff; /* bg-blue-50 */
+            color: #1d4ed8; /* text-blue-700 */
+            padding: 0.5rem 1rem; /* py-2 px-4 */
+            border-radius: 0.375rem; /* rounded-md */
+            border: 1px solid #93c5fd; /* border-blue-300 */
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 200ms, border-color 200ms;
+            /* Ensure the button doesn't shrink or grow unexpectedly */
+            flex-shrink: 0;
+        }
+
+        .filter-button:hover {
+            background-color: #dbeafe; /* hover:bg-blue-100 */
+            border-color: #60a5fa; /* hover:border-blue-400 */
+        }
+
+        .filter-button svg {
+            width: 1.25rem; /* w-5 */
+            height: 1.25rem; /* h-5 */
+        }
+
+        .reset-button {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem; /* space-x-2 */
+          background-color: #fee2e2; /* bg-red-100 */
+          color: #dc2626; /* text-red-700 */
+          padding: 0.5rem 1rem; /* py-2 px-4 */
+          border-radius: 0.375rem; /* rounded-md */
+          border: 1px solid #fca5a5; /* border-blue-300 */
+          cursor: pointer;
+          font-weight: 500;
+          transition: background-color 200ms, border-color 200ms;
+          flex-shrink: 0;
+      }
+
+      .reset-button svg {
+          width: 1.25rem; /* w-5 */
+          height: 1.25rem;
+          fill: currentColor; /* Makes the SVG icon inherit the text color (white) */
+      }
+
+      /* Hover effect */
+      .reset-button:hover {
+          background-color: #fbd6d6; /* Lighter red for rejected on hover */
+            color: #b31f1f;
+        }
+
+      /* Table Styles */
+      .table-container {
+          background-color: #fff; /* bg-white */
+          border-radius: 0.5rem; /* rounded-lg */
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+          overflow-x: auto; /* Enable horizontal scrolling for tables on small screens */
+          /* Add the following to fix table resizing */
+          min-height: 600px; /* Or a suitable height based on your design */
+          max-height: 600px; /* Optional: If you want to limit the maximum height */
+          overflow-y: auto; /* Enable vertical scrolling if content exceeds max-height */
+          contain: layout size; /* This is a powerful property for isolation */
+          display: block; /* Ensure it behaves as a block element for min/max height to work reliably */
+      }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.80rem;
+            color: #374151;
+        }
+
+        .data-table thead th {
+            padding: 0.75rem 1rem;
+            background-color: #1d4ed8;
+            color: #fff;
+            text-align: center;
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            white-space: nowrap;
+            position: sticky; /* Make the header sticky */
+            top: 0; /* Stick to the top of its scrollable container */
+            z-index: 10;
+        }
+
+        /* No sorting for Status column, so remove cursor */
+        .data-table thead th[data-column="status"] {
+            cursor: default;
+        }
+
+        .data-table tbody td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle; /* Align content nicely */
+            white-space: nowrap; /* Prevent wrapping in cells */
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none; /* No border for the last row */
+        }
+
+        .data-table tbody tr:nth-child(odd) {
+            background-color: #F7F6FE; /* Even row background */
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f3f4f6; /* Hover effect for rows */
+        }
+
+        /* Status Badges - Base Colors */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center; /* Center content horizontally */
+            padding: 0.25rem 0.75rem; /* px-3 py-1 */
+            border-radius: 9999px; /* rounded-full */
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 600; /* font-semibold */
+            text-transform: capitalize;
+            min-width: 60px; /* Ensure a minimum width for visibility */
+            /* Stronger fallback style for status badge to ensure visibility */
+            background-color: #d1d5db; /* bg-gray-300 */
+            color: #374151; /* text-gray-700 */
+            border: 1px solid #9ca3af; /* Add a subtle border */
+        }
+
+        .status-approved, /* Added for direct mapping of 'Approved' */
+        .status-accepted {
+            background-color: #dcfce7; /* bg-green-100 */
+            color: #16a34a; /* text-green-700 */
+            border-color: #86efac; /* Lighter green border */
+        }
+        .status-pending {
+            background-color: #fef9c3; /* bg-yellow-100 */
+            color: #d97706; /* text-yellow-700 */
+            border-color: #fde68a; /* Lighter yellow border */
+        }
+        .status-rejected {
+            background-color: #fee2e2; /* bg-red-100 */
+            color: #dc2626; /* text-red-700 */
+            border-color: #fca5a5; /* Lighter red border */
+        }
+        .status-canceled {
+            background-color: #e5e7eb; /* bg-gray-200 */
+            color: #6b7280; /* text-gray-500 */
+            border-color: #9ca3af; /* Gray border */
+        }
+
+        /* Table name cell with image */
+        .name-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem; /* space-x-2 */
+        }
+
+        .name-cell .avatar {
+            width: 1.5rem; /* w-6 */
+            height: 1.5rem; /* h-6 */
+            border-radius: 9999px; /* rounded-full */
+            object-fit: cover;
+        }
+
+        /* Sorting icons */
+        .sort-icon {
+            display: inline-block;
+            width: 0.8rem;
+            height: 0.8rem;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0.4; /* Slightly faded when not active */
+        }
+
+        .sort-icon::before {
+            content: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"%3E%3Cpath fill-rule="evenodd" d="M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" /%3E%3C/svg%3E'); /* Up arrow */
+            display: inline-block;
+            width: 100%;
+            height: 100%;
+            filter: invert(100%);
+        }
+
+        .sort-icon.asc::before {
+            content: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"%3E%3Cpath fill-rule="evenodd" d="M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" /%3E%3C/svg%3E'); /* Up arrow */
+            opacity: 1;
+            filter: invert(100%);
+        }
+
+        .sort-icon.desc::before {
+            content: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"%3E%3Cpath fill-rule="evenodd" d="M12.53 16.28a.75.75 0 0 1-1.06 0l-7.5-7.5a.75.75 0 0 1 1.06-1.06L12 14.69l6.97-6.97a.75.75 0 1 1 1.06 1.06l-7.5 7.5Z" clip-rule="evenodd" /%3E%3C/svg%3E'); /* Down arrow */
+            opacity: 1;
+            filter: invert(100%);
+        }
+
+        /* New styles for status dropdown */
+        .status-dropdown-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .status-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #ffffff; 
+            min-width: 120px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 100; 
+            border-radius: 0.375rem;
+            overflow: hidden;
+            top: 100%; 
+            left: 0;
+            margin-top: 0.5rem;
+            border: 1px solid #d1d5db; 
+        }
+
+        .status-dropdown-content span, .filter-dropdown-content span {
+            color: #374151; /* Changed to a standard text color */
+            padding: 8px 12px;
+            text-decoration: none;
+            display: block;
+            text-transform: capitalize;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+                /* Hover states for individual status options within the dropdown */
+        .status-dropdown-content span.status-option[data-status="Approved"]:hover, /* Updated to "Approved" */
+        .filter-dropdown-content span.filter-option[data-value="approved"]:hover {
+            background-color: #c8f2d5; /* Lighter green for accepted on hover */
+            color: #107f35; /* Optionally make text slightly darker on hover */
+        }
+
+        .status-dropdown-content span.status-option[data-status="Rejected"]:hover,
+        .filter-dropdown-content span.filter-option[data-value="rejected"]:hover {
+            background-color: #fbd6d6; /* Lighter red for rejected on hover */
+            color: #b31f1f;
+        }
+
+        .status-dropdown-content span.status-option[data-status="Pending"]:hover,
+        .filter-dropdown-content span.filter-option[data-value="pending"]:hover {
+            background-color: #fcf6b3; /* Lighter yellow for pending on hover */
+            color: #a65e04;
+        }
+
+        .status-dropdown-content span.status-option[data-status="Cancelled"]:hover,
+        .filter-dropdown-content span.filter-option[data-value="canceled"]:hover {
+            background-color: #d1d5db; /* Lighter gray for cancelled on hover */
+            color: #555c65;
+        }
+
+        /* If you have "delivered" and "process" in your dropdown, add them too */
+        .status-dropdown-content span.status-option[data-status="delivered"]:hover {
+            background-color: #b3e6ff; /* Lighter sky blue for delivered on hover */
+            color: #006bb0;
+        }
+
+        .status-dropdown-content span.status-option[data-status="process"]:hover {
+            background-color: #b3e6ff; /* Lighter blue for process on hover */
+            color: #1e4bb2;
+        }
+
+        .status-dropdown-container.active .status-dropdown-content {
+            display: block;
+        }
+
+        /* Styles for the new filter options popover */
+      .filter-options-popover {
+        display: none; /* Hidden by default */
+        position: absolute;
+        background-color: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        padding: 1rem;
+        z-index: 5000; 
+        right: 0;
+        margin-right: 1rem;
+        top: calc(40% + 0.5rem); 
+        min-width: 200px;
+        flex-direction: column;
+        gap: 0.75rem;
+}
+
+        .filter-options-popover.active {
+            display: flex; /* Show when active */
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #4b5563;
+        }
+
+        /* Styles for the new custom filter dropdowns */
+        .filter-dropdown-container {
+            position: relative;
+            width: 200px; /* adjust */
+            cursor: pointer;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            background-color: #fff;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #374151;
+            box-sizing: border-box;
+            transition: border-color 200ms, box-shadow 200ms;
+        }
+        .filter-selected-value {
+            display: inline-block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1; /* allow to take available space */
+        }
+        .filter-dropdown-container:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+
+        .filter-dropdown-container .arrow-icon {
+            width: 1rem;
+            height: 1rem;
+            margin-left: 0.5rem;
+            transition: transform 200ms;
+        }
+
+        .filter-dropdown-container.active .arrow-icon {
+            transform: rotate(180deg);
+        }
+
+        .filter-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            min-width: 100%;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 2000;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            top: calc(100% + 0.25rem); /* Position below the selected value */
+            left: 0;
+            border: 1px solid #d1d5db;
+        }
+
+        .filter-dropdown-container.active .filter-dropdown-content {
+            display: block;
+        }
+
+        .filter-dropdown-content span.filter-option {
+            padding: 8px 12px;
+            text-decoration: none;
+            display: block;
+            color: #374151;
+            cursor: pointer;
+        }
+
+        .filter-dropdown-content span.filter-option:hover {
+            background-color: #f3f4f6;
+        }
+        .filter-dropdown-content span.filter-option[data-value=""] {
+            font-style: italic; /* Style for 'All' option */
+            color: #6b7280;
+        }
+
+
+        .apply-filters-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #2563eb; /* bg-blue-600 */
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 200ms;
+            margin-top: 0.5rem;
+        }
+
+        .apply-filters-button:hover {
+            background-color: #1d4ed8; /* hover:bg-blue-700 */
+        }
+
+        /* Adjust search-filter-container to accommodate the popover positioning */
+        .search-filter-container {
+            position: relative; /* Important for positioning the popover */
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Employee Balance specific styles (now table-based) */
+        /* Reusing .table-container and .data-table styles for consistency */
+
+        /* Top Date Display */
+        .date-display-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; /* Align to the right */
+            margin-bottom: 1.5rem;
+            font-size: 1.275rem; /* text-lg */
+            font-weight: 500; /* font-medium */
+            color: #1d4ed8; /* text-blue-700 */
+            display: none; /* Hidden by default */
+        }
+
+        .date-display-container .name{
+            justify-content: flex-start; /* Align to the lrft */
+            margin-right: auto;
+            font-weight: 750;
+            font-size: 2rem;
+        }
+
+        .date-display-container.active {
+            display: flex; /* Shown when active */
+        }
+
+        .date-display-container .weather-icon {
+            margin-right: 0.5rem;
+            font-size: 2.25rem; /* Adjust emoji size */
+        }
+
+        .footer-section {
+          display: flex;
+          flex-direction: column;
+          background-color: var(--secondary-blue);
+          align-items: center;
+          min-height: 5rem;
+          margin-top: 1rem;
+          padding: 0.3rem;
+          border-radius: 0.5rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          background-color: #eff6ff;
+      }
+
+      .footer-details {
+          text-align: center;
+          justify-content: center;
+          margin-top: 0.75rem;
+          color: #374151;
+      }
+
+      .footer-details a {
+        text-decoration: none;
+        color: var(--text-dark);
+        transition: background-color 200ms, color 200ms;
+      }
+
+      .footer-details a:visited {
+        text-decoration: none;
+        color: var(--text-dark);
+      }
+
+      .footer-details a:hover {
+        text-decoration: none;
+        color: var(--primary-blue);
+        font-weight: 500;
+      }
+
+      
+      #forceLeaveCard {
+          min-height: 800px; /* Adjust this value as needed to set your desired minimum height */
+          /* You can also use percentage or viewport units like min-height: 80vh; */
+      }
+
+      #forceLeaveDate {
+          font-size: 1.2rem;
+          margin-bottom: 1rem;
+          padding: 0.5rem;
+          border-radius: 0.25rem;
+          text-align: right;
+      }
+
+      button: focus, 
+      .btn:focus {
+          outline: none;
+      }
+      .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 0.375rem;
+          font-weight: 500;
+          transition: background-color 0.2s ease-in-out;
+          border: none; 
+          font-size: 1.1rem;
+          
+      }
+      .force-leave-buttons {
+          display: flex; /* Makes the container a flex container */
+          gap: 1rem; /* Adds space between the buttons */
+          justify-content: flex-end; /* Aligns items (buttons) to the end of the flex container (right side) */
+          padding-top: 1rem;
+          border-top: 1px solid #e2e8f0;
+          margin-top: 2rem;
+      }
+
+      .btn-primary {
+          background-color: #2563EB; 
+          color: #fff;
+          padding: 0.75rem 1.5rem;
+          
+      }
+      .btn-secondary {
+          background-color: #FF0000; 
+          color: #fff;
+          padding: 0.75rem 1.5rem;
+      }
+      .btn-tertiary {
+          background-color: #f3f4f6;
+          color: #374151;
+          padding: 0.75rem 1.5rem;
+          border: 1px solid #d1d5db;
+      }
+      .btn-primary:hover {
+          background-color: #1e40af; 
+          padding: 0.75rem 1.5rem;
+      }
+      .btn-secondary:hover {
+          background-color: #B22222; 
+          padding: 0.75rem 1.5rem;
+      }
+      .btn-tertiary:hover {
+          background-color: #e5e7eb; 
+          padding: 0.75rem 1.5rem;
+      }
+
+      .form-row {
+          display: flex; /* Makes the container a flexbox */
+          gap: 1.5rem; /* Adjust space between side-by-side form groups */
+          margin-bottom: 1rem; /* Adds space below each row of fields */
+          flex-wrap: wrap; /* Allows items to wrap to the next line on smaller screens */
+      }
+
+      .form-row .form-group {
+          flex: 1; /* This makes each form-group take up equal available space within the row */
+          min-width: 150px; /* Optional: ensures fields don't get too small on very narrow screens */
+          margin-bottom: 0; /* Remove default bottom margin from form-group when in a row */
+      }
+
+      /* Ensure inputs/selects within form-row fill their group's width */
+      .form-row .form-input {
+          width: 100%;
+      }
+
+      .required-asterisk {
+          color: #ef4444; /* A vibrant red color */
+          margin-left: 0.25rem; /* Adds a small space between the label text and the asterisk */
+      }
+
+      .form-actions {
+          display: flex; /* Makes the container a flexbox */
+          justify-content: flex-end; /* Aligns items (the button) to the end (right side) of the flex container */
+          /* The mt-4 class you already added handles the top margin */
+      }
+      .btn .fas,
+      .btn .far,
+      .btn .fab { /* Targets solid, regular, and brand Font Awesome icons within any element with the .btn class */
+          margin-right: 0.5rem; /* Adjust this value as needed for your desired spacing */
+      }
+
+      /* Force Leave Modal Specific Styles */
+.close-modal-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    color: #6b7280; /* Matches your --text-light equivalent */
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.close-modal-btn:hover {
+    color: #1f2937; /* Matches --text-dark for hover */
+}
+
+.error-message {
+    font-size: 0.875rem; /* Matches your text-sm */
+    color: var(--error-red); /* Uses #E74C3C from your :root */
+    margin-top: 5px;
+    min-height: 1.2em; /* Ensures layout stability */
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    font-size: 1.5rem; /* Matches your main-content-card h1 size */
+    font-weight: 600; /* Matches your form legend */
+    color: #1f2937; /* Matches --text-dark */
+    margin-bottom: 1.7rem; /* Consistent spacing */
+}
+
+/* Optional: Ensure modal-overlay works with JavaScript display toggle */
+.modal-overlay {
+    display: none; /* Override visibility: hidden to work with JS */
+    opacity: 1; /* Remove opacity transition to avoid conflict */
+    visibility: visible; /* Remove visibility transition */
+}
+.modal-overlay.show {
+    display: flex; /* Match JavaScript's style.display = 'flex' */
+}
+/* Force Leave Modal Content Styles */
+.force-leave-modal-content {
+    max-width: 800px;
+    width: 95%; /* Adjust for smaller screens */
+    max-height: 90vh; /* Limit height to viewport height */
+    padding: 1.5rem;
+    background-color: #fff;
+    border-radius: 0.5rem; /* This line rounds the corners */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    text-align: left;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Enable scrolling for modal content if it overflows */
+}
+
+/* Adjust form group spacing for larger modal */
+.force-leave-modal-content .form-group {
+    margin-bottom: 1.25rem; /* Slightly tighter than 1.5rem */
+}
+
+/* Adjust input and select padding for readability */
+.force-leave-modal-content input[type="text"],
+.force-leave-modal-content select {
+    padding: 0.75rem;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.force-leave-modal-content form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Adjust button spacing and size */
+.force-leave-modal-content .modal-actions {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 1.25rem;
+    margin-top: auto; /* Keep buttons at the bottom */
+}
+
+.force-leave-modal-content .modal-button {
+    padding: 0.75rem 1.5rem; /* Larger buttons */
+    font-size: 1rem;
+}
+
+/* Ensure close button and header align with new modal size */
+.force-leave-modal-content .close-modal-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.force-leave-modal-content .close-modal-btn:hover {
+    color: #1f2937;
+}
+
+.force-leave-modal-content h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 20px;
+}
+datalist {
+    font-family: 'Inter', sans-serif;
+}
+.data-table tr.selected {
+            background-color: #e0f2fe;
+            cursor: pointer;
+}
+
+/* NEW: Style for checkbox column */
+.data-table input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    cursor: pointer;
+    accent-color: #2563eb;
+}
+
+.data-table.force-leave-names-table th {
+    text-align: left; /* NEW: Align headers left to match table data */
+}
+
+#confirmedForceLeaveNamesTable tbody:empty::after {
+    /*content: "No employees added"; */
+    display: block;
+    text-align: left; /* Match preview table headers */
+    padding: 0.75rem; /* Match .data-table td */
+    color: #6b7280; /* Gray, consistent with UI */
+    font-size: 0.875rem; /* Match .data-table td */
+    position: absolute;
+    top: 2.5rem; /* Below headers, fits 250px min-height */
+}
+
+.autocomplete-dropdown {
+    position: relative;
+    top: 100%; /* Below input */
+    left: 0;
+    width: 100%; /* Match input width */
+    max-height: 200px; /* Scrollable height */
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ced4da; /* Match .form-control border */
+    border-radius: 0.25rem; /* Match .form-control border-radius */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000; /* Above other elements */
+    display: none; /* Hidden by default */
+    
+}
+.autocomplete-dropdown .autocomplete-item {
+    padding: 0.375rem 0.75rem; /* Match .form-control padding */
+    font-size: 1rem; /* Match .form-control or .data-table td */
+    color: #000000; /* Dark text, match .form-control */
+    cursor: pointer;
+}
+.autocomplete-dropdown .autocomplete-item:hover {
+    background: #ADD8E6; /* Light gray hover, match Bootstrap bg-light */
+}
+.autocomplete-dropdown .no-results {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    color: #6c757d; /* Gray, match Bootstrap text-muted */
+}
+
+//Force Leave History:
+
+.btn-history {
+          background-color: #00A86B; 
+          color: #fff;
+          padding: 0.75rem 1.2rem;
+          margin-bottom: 20px;
+          
+}
+
+.btn-history:hover {
+          background-color: #2E6F40; 
+          padding: 0.75rem 1.5rem;
+}
+
+.force-leave-history-modal-content {
+    background-color: #fff; /* Solid white background */
+    padding: 2rem; /* Adds space around the content */
+    border-radius: 0.5rem; /* Rounds the corners of the modal */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Adds a subtle shadow */
+    max-width: 1000px; /* Sets a maximum width for the modal */
+    width: 95%; /* Make the modal responsive, taking 95% of viewport width */
+    max-height: 90vh; /* Limit height to 90% of viewport height */
+    display: flex; /* Use flexbox for internal layout */
+    flex-direction: column; /* Stack children vertically */
+    position: relative; /* Ensures proper positioning of child elements like the close button */
+    overflow-y: auto; /* Enable scrolling for modal content if it overflows */
+    overflow-x: hidden; /* NEW: Hide horizontal overflow to ensure border-radius is visible */
+}
+
+.force-leave-history-modal-content h2 {
+    text-align: center;
+    margin-top: 0; /* Optional: Adjust top margin if needed */
+    margin-bottom: 20px; /* Optional: Add some space below the heading */
+    color: #1d4ed8;
+    font-weight: 700;
+}
+
+/* stylecss.html */
+
+/* Adjust the width of the table itself */
+#forceLeaveHistoryTable {
+    width: 90%; /* Example: make the table 90% width of its container */
+    max-width: 850px; /* Example: ensure it doesn't get too wide */
+    /* Add other table-specific styles here, e.g., border-collapse, font-size */
+    font-size: 0.9em; /* Smaller font size for this table */
+    padding-top: 20px;
+    
+}
+
+/* Adjust properties of table cells (th, td) for this specific table */
+#forceLeaveHistoryTable th,
+#forceLeaveHistoryTable td {
+    padding: 8px 12px; /* Example: adjust padding */
+    white-space: nowrap; /* Prevent text wrapping in cells if desired */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Add ellipsis for overflow */
+}
+
+/* Adjust the wrapper for scrolling if needed */
+#forceLeaveHistoryModal .table-scroll-wrapper {
+    max-height: 300px; /* Example: set a max height for scrolling within the modal */
+    min-height: 600px;
+    overflow-y: auto; /* Enable vertical scrolling */
+    margin-bottom: 1.5rem;
+}
+
+#forceLeaveHistoryModal .filter-controls-container {
+    /* Add or adjust this property */
+    margin-bottom: 20px; /* Adjust '20px' to your desired spacing */
+
+    /* You might also want to ensure other general styles for this container are here,
+       e.g., if you added display: flex, etc., in previous steps. */
+    /* Example of other styles you might have: */
+    /* display: flex; */
+    /* align-items: center; */
+    /* justify-content: center; */
+    /* gap: 10px; */
+}
+
+/* Basic spinner styles */
+/* Basic styles for the loading spinner container */
+.loading-spinner-container {
+    position: absolute; /* Make it an overlay */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+    z-index: 999; /* Ensure it's on top of other modal content */
+    border-radius: 8px; /* Match modal content border-radius */
+    /* Remove padding: 30px; from here as it's now an overlay */
+    padding: 20px; /* Keep some internal padding for spinner/text */
+    color: #555;
+    font-size: 1.1em;
+}
+
+/* Spinner animation */
+.spinner {
+     border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #007bff; /* Primary color for the spinning part */
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+.table-scroll-wrapper {
+            overflow-x: auto;
+            max-height: 250px; /* NEW: Set fixed height for scrollable area */
+            min-height: 250px;
+            overflow-y: auto; /* NEW: Enable vertical scrollbar */
+        }
+
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+    </style>
+    <style>
+        /* General Body Styles */
+        * {
+          margin: 0;
+          padding: 0;
+          box-sizing: border-box;
+          font-family: 'Inter', sans-serif;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6; 
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Login Page Styles */
+        :root {
+            --primary-blue: #0039A0;
+            --secondary-blue: #E2EFFF;
+            --text-dark: #333;
+            --text-light: #666;
+            --border-color: #D3D3D3;
+            --input-bg: #F0F2F5;
+            --error-red: #E74C3C;
+        }
+
+        .login-container {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            position: fixed; /* To cover the whole screen */
+            top: 0;
+            left: 0;
+            z-index: 2000; /* Ensure it's on top */
+            background-color: #f3f4f6;
+        }
+
+        .login-left-panel {
+            flex: 1;
+            background-color: var(--secondary-blue);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+            text-align: center;
+            color: var(--primary-blue);
+            flex-direction: column;
+        }
+
+        .login-logo-section {
+            max-width: 430px;
+        }
+
+        .login-logo-section img{
+            height: auto;
+            max-width: 100%;
+        }
+
+        .login-tagline-track {
+            font-size: 1.3em;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--text-dark);
+        }
+
+        .login-tagline-submit {
+            font-size: 0.9em;
+            line-height: 1.5;
+            color: var(--text-light);
+        }
+
+        .login-right-panel {
+            flex: 1;
+            background-color: #fff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 40px;
+        }
+
+        .login-form-container {
+            width: 100%;
+            max-width: 350px;
+            text-align: center;
+        }
+
+        .login-icon-hand {
+            font-size: 3em;
+            margin-bottom: 15px;
+        }
+
+        .login-welcome-back {
+            font-size: 1.8em;
+            color: var(--text-dark);
+            margin-bottom: 30px;
+        }
+
+        .login-input-group {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .login-input-group label {
+            display: block;
+            font-size: 0.9em;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+        }
+
+        .login-input-with-icon {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .login-input-with-icon input {
+            width: 100%;
+            padding: 12px 40px 12px 15px;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1em;
+            background-color: var(--input-bg);
+            outline: none;
+            transition: border-color 0.2s ease;
+        }
+
+        .login-input-with-icon input:focus {
+            border-color: var(--primary-blue);
+        }
+
+        .login-input-with-icon .info-icon,
+        .login-input-with-icon .toggle-password {
+            position: absolute;
+            right: 15px;
+            color: var(--text-light);
+            cursor: pointer;
+            font-size: 0.9em;
+        }
+
+        .login-error-message {
+            color: var(--error-red);
+            font-size: 0.85em;
+            margin-top: 5px;
+            min-height: 1.2em;
+        }
+
+        .login-btn {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--primary-blue);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            margin-top: 5px;
+        }
+
+        .login-btn:hover {
+            background-color: #002870;
+        }
+
+        .login-need-help {
+            font-size: 0.9em;
+            color: var(--text-light);
+            margin-top: 25px;
+        }
+
+        .login-contact {
+            color: var(--primary-blue);
+            text-decoration: none;
+            font-weight: 600;
+            cursor: default;
+        }
+
+        .login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 3000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .login-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .login-overlay-content {
+            background-color: #fff;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 400px;
+            width: 90%;
+            transform: translateY(-20px);
+            transition: transform 0.3s ease;
+        }
+
+        .login-overlay.show .login-overlay-content {
+            transform: translateY(0);
+        }
+
+        .login-overlay-icon {
+            margin-bottom: 1rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .login-overlay-icon svg {
+            width: 4rem;
+            height: 4rem;
+            color: #ef4444;
+        }
+
+        .login-overlay-text {
+            font-size: 1.25rem;
+            color: #333;
+            margin-bottom: 2rem;
+            line-height: 1.5;
+        }
+
+        .login-overlay-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .login-overlay-button {
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            background-color: #ef4444; 
+            color: white;
+            border: none;
+        }
+
+        .login-overlay-button.close:hover {
+            background-color: #dc2626;
+            transform: translateY(-2px);
+        }
+        /* End Login Page Styles */
+
+        /* Left Sidebar Styles */
+        .sidebar {
+            width: 18rem;
+            background-color: #eff6ff;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            padding: 1.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            border-radius: 0.3rem;
+            margin-left: 1rem;
+            margin-top: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .sidebar .logo-section {
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .sidebar .logo-section img {
+            height: 3.5rem;
+            width: auto;
+            border-radius: 0.25rem;
+            margin-top: 0.5rem;
+        }
+
+        .sidebar .profile-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }
+
+        .sidebar .profile-avatar {
+            width: 5rem;
+            height: 5rem;
+            background-color: #dbeafe;
+            border-radius: 9999px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 0.75rem;
+        }
+
+        .sidebar .profile-avatar svg {
+            width: 3rem;
+            height: 3rem;
+            color: #2563eb;
+        }
+
+        .sidebar .profile-section p:first-of-type {
+            font-size: 1rem;
+            font-weight: 600;
+            color: #1f2937;
+        }
+
+        .sidebar .profile-section p:last-of-type {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .sidebar nav ul {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+
+        .sidebar nav li {
+            margin-bottom: 1rem;
+        }
+
+        .sidebar nav a, .sidebar .logout-link {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            transition: background-color 200ms, color 200ms;
+            text-decoration: none;
+            color: #374151;
+        }
+
+        .sidebar nav a svg, .sidebar .logout-link svg {
+            width: 1.25rem;
+            height: 1.25rem;
+            margin-right: 0.75rem;
+        }
+
+        .sidebar nav a:hover {
+            background-color: #eff6ff;
+            color: #1d4ed8;
+        }
+
+        /* Specific style for the active navigation link */
+        .sidebar nav .active-link {
+            background-color: #dbeafe;
+            color: #1d4ed8;
+        }
+
+        .sidebar .logout-section {
+            margin-top: 2rem;
+        }
+
+        .sidebar .logout-link {
+            color: #ef4444;
+        }
+
+        .sidebar .logout-link:hover {
+            background-color: #fee2e2;
+        }
+
+        /* Main Content Area Styles */
+        #appContent {
+          display: none; 
+          width: 100%; 
+          display: flex;
+        }
+
+        .main-content {
+            flex: 1;
+            padding: 2rem;
+        }
+
+        .main-content-card {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        }
+
+        /* Styles for the step indicator container */
+        .step-indicator-container {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .step-indicator {
+            display: flex;
+            align-items: center;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .step-indicator > div + div {
+            margin-left: 0.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .step-indicator > div + div {
+                margin-left: 1rem;
+            }
+        }
+
+        .step-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #6b7280;
+            font-size: 0.875rem;
+        }
+
+        .step-item.active {
+            color: #1d4ed8;
+        }
+
+        .step-circle {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 2.5rem;
+            height: 2.5rem;
+            border-radius: 9999px;
+            border: 1px solid currentColor;
+        }
+
+        .step-active .step-circle {
+            background-color: #1d4ed8;
+            color: #fff;
+            border-color: #1d4ed8;
+        }
+
+        .step-inactive .step-circle {
+            background-color: #fff;
+            color: #6b7280;
+            border-color: #d1d5db;
+        }
+
+        .step-text {
+            margin-top: 0.25rem;
+            display: none;
+        }
+
+        @media (min-width: 768px) {
+            .step-text.md-block {
+                display: block;
+            }
+        }
+
+        .step-line {
+            flex-grow: 1;
+            border-top: 2px dashed #d1d5db;
+            width: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .step-line.md-w-16 {
+                width: 4rem;
+            }
+        }
+
+        /* Styles for the "Leave Request Form" H1 inside the main form card */
+        .main-content-card h1 {
+            font-size: 1.5rem;
+            line-height: 2rem;
+            font-weight: 600;
+            color: #fff;
+            background-color: #1d4ed8;
+            padding: 1rem 1.5rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+            width: calc(100% + 3rem);
+            margin-left: -1.5rem;
+            margin-right: -1.5rem;
+            margin-top: -1.5rem;
+            position: relative;
+            box-sizing: border-box;
+        }
+
+        .main-content-card > h1 + .form-container {
+             margin-top: 1.5rem;
+        }
+
+        /* Form Layout and Elements */
+        .form-container {
+            
+        }
+        .form-container > div + div,
+        .form-container fieldset + fieldset {
+            margin-top: 1.5rem;
+        }
+
+        .grid-layout {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr));
+            gap: 1rem;
+        }
+
+        @media (min-width: 768px) {
+            .grid-layout.md-cols-2 {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+
+        @media (min-width: 1024px) {
+            .grid-layout.lg-cols-4 {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            font-weight: 500;
+            color: #374151;
+        }
+
+        input[type="text"],
+        input[type="date"],
+        textarea,
+        select {
+            margin-top: 0.25rem;
+            margin-bottom: 0.25rem;
+            display: block;
+            width: 100%;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+            padding: 0.5rem;
+            outline: none;
+            box-sizing: border-box;
+        }
+
+        input[type="text"]:focus,
+        input[type="date"]:focus,
+        textarea:focus,
+        select:focus {
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+            border-color: #3b82f6;
+        }
+
+        /* Remove readonly styles to make all inputs appear editable */
+        input[readonly] {
+            background-color: #f9fafb;
+            color: #4b5563;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        .required-label::after {
+            content: '*';
+            color: #ef4444;
+            margin-left: 0.25rem;
+        }
+
+        fieldset {
+            border: 1px solid #e5e7eb;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        legend {
+            font-size: 1.125rem;
+            line-height: 1.75rem;
+            font-weight: 600;
+            color: #1f2937;
+            padding-left: 0.5rem;
+            margin-left: -0.5rem;
+        }
+
+        .fieldset-content-mt {
+            margin-top: 1rem;
+        }
+
+        .remarks {
+          margin-top: 2rem;
+          margin-bottom: 2rem;
+          padding: 2rem;
+        }
+
+        .relative-input-wrapper {
+            position: relative;
+            margin-top: 0.25rem;
+        }
+
+        .input-icon-wrapper {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            right: 0;
+            padding-right: 0.75rem;
+            display: flex;
+            align-items: center;
+            pointer-events: none;
+        }
+
+        .input-icon-wrapper svg {
+            height: 1.25rem;
+            width: 1.25rem;
+            color: #9ca3af;
+        }
+
+        .flex-input-group {
+            display: flex;
+            margin-top: 0.25rem;
+        }
+
+        .flex-input-group > select + select {
+            margin-left: 0.5rem;
+        }
+
+        .submit-button-container {
+            display: flex;
+            justify-content: flex-end;
+            padding-top: 1rem;
+        }
+
+        .submit-button {
+            background-color: #1d4ed8;
+            color: #fff;
+            padding: 0.5rem 1.5rem;
+            font-size: 1.1rem;
+            border-radius: 0.375rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            transition: background-color 200ms;
+            border: none;
+            cursor: pointer;
+            margin-top: 3.2rem;
+        }
+
+        .submit-button:hover {
+            background-color: #1e40af;
+        }
+
+        .loading-overlay {
+          display: none; /* ✅ Hidden by default */
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100vw;
+          height: 100vh;
+          background-color: rgba(0, 0, 0, 0.5);
+          justify-content: center;
+          align-items: center;
+          z-index: 9999;
+      }
+
+      .loader {
+        width: 50px;
+        height: 50px;
+        border: 6px solid #f3f3f3;
+        border-top: 6px solid var(--primary-blue);
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+            }
+
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+        }
+
+        .modal-overlay.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .modal-content {
+            background-color: #fff;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            text-align: center;
+            max-width: 24rem;
+            width: 90%;
+        }
+
+        .modal-icon {
+            color: #22c55e;
+            margin-bottom: 1rem;
+        }
+
+        .modal-icon svg {
+            width: 3rem;
+            height: 3rem;
+            margin: 0 auto;
+        }
+
+        .modal-text {
+            font-size: 1.125rem;
+            font-weight: 500;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            justify-content: center;
+            gap: 1rem;
+        }
+
+        .modal-button {
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+        }
+
+        .modal-button.cancel {
+            background-color: #f3f4f6;
+            color: #374151;
+            border: 1px solid #d1d5db;
+        }
+
+        .modal-button.cancel:hover {
+            background-color: #e5e7eb;
+        }
+
+        .modal-button.apply {
+            background-color: #2563eb;
+            color: #fff;
+            border: 1px solid transparent;
+        }
+
+        .modal-button.apply:hover {
+            background-color: #1e40af;
+        }
+
+        /* NEW MEDIA UPLOAD STYLES*/
+        .media-upload-card {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-top: 2rem;
+        }
+
+        .media-upload-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+
+        }
+
+        .media-upload-header h1 {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #1f2937;
+            padding: 0;
+            background-color: transparent;
+            width: auto;
+            margin: 0;
+            box-shadow: none;
+        }
+
+        .media-upload-info {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-bottom: 1rem;
+        }
+
+        .file-number-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .file-number-group label {
+            font-size: 1rem;
+            font-weight: 500;
+            color: #374151;
+            margin-bottom: 0.5rem;
+        }
+
+        .file-number-group input[type="text"] {
+            margin-top: 0.25rem;
+            padding: 0.625rem;
+            font-size: 1rem;
+        }
+        .media-drop-area {
+            border: 2px dashed #9ca3af;
+            border-radius: 0.5rem;
+            padding: 2.5rem 1.5rem;
+            text-align: center;
+            background-color: #f9fafb;
+            transition: border-color 0.2s ease, background-color 0.2s ease;
+            cursor: pointer;
+            margin-bottom: 1.5rem;
+            position: relative;
+        }
+
+        .media-drop-area:hover {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .media-drop-area.highlight {
+            border-color: #3b82f6;
+            background-color: #eff6ff;
+        }
+
+        .media-drop-area .icon-upload {
+            width: 3rem;
+            height: 3rem;
+            margin: 0 auto 1rem;
+            color: #3b82f6
+        }
+
+        .media-drop-area p {
+            font-size: 0.875rem;
+            line-height: 1.25rem;
+            text-align: center;
+            position: relative;
+            color: #6b7280;
+        }
+
+        .media-drop-area p strong {
+            font-weight: 600;
+        }
+
+        .media-drop-area .or-divider {
+            margin: 0.5rem 0;
+            color: #9ca3af;
+        }
+
+        .media-drop-area .browse-files-btn {
+            background: none;
+            border: none;
+            color: #2563eb;
+            font-size: 1rem;
+            font-weight: 500;
+            cursor: pointer;
+            padding: 0.5rem 0.75rem;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .media-drop-area .browse-files-btn:hover {
+            background-color: #e0f2fe;
+        }
+
+        .media-drop-area input[type="file"] {
+            display: none;
+        }
+
+        .file-upload-restrictions {
+            font-size: 0.875rem;
+            color: #6b7280;
+            margin-top: 1.5rem;
+            margin-bottom: 1.5rem;
+            text-align: center;
+        }
+
+        .media-file-list {
+            margin-top: 1rem;
+        }
+
+        .media-file-item {
+            display: flex;
+            align-items: center;
+            padding: 0.75rem 1rem;
+            background-color: #fff;
+            border: 1px solid #e5e7eb;
+            border-radius: 0.375rem;
+            margin-bottom: 0.75rem;
+        }
+
+        .media-file-icon {
+            width: 2.5rem;
+            height: 2.5rem;
+            margin-right: 1rem;
+            color: #3b82f6;
+        }
+
+        .media-file-details {
+            flex-grow: 1;
+        }
+
+        .media-file-details .file-name {
+            font-weight: 500;
+            color: #1f2937;
+            font-size: 0.875rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .media-file-details .file-size {
+            font-size: 0.75rem;
+            color: #6b7280;
+        }
+
+        .media-file-progress-bar-container {
+            width: 100%;
+            background-color: #e5e7eb;
+            border-radius: 0.25rem;
+            height: 0.5rem;
+            overflow: hidden;
+            margin-top: 0.25rem;
+        }
+
+        .media-file-progress-bar {
+            height: 100%;
+            background-color: #2563eb;
+            border-radius: 0.25rem;
+            width: 0%;
+            transition: width 0.3s ease-in-out;
+        }
+
+        .media-file-actions {
+            margin-left: 1rem;
+        }
+
+        .media-file-actions .remove-btn {
+            background: none;
+            border: none;
+            color: #ef4444;
+            cursor: pointer;
+            font-size: 1.25rem;
+            line-height: 1;
+        }
+        .media-file-actions .remove-btn:hover {
+            color: #dc2626;
+        }
+
+        .media-upload-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .media-upload-buttons .cancel-btn {
+            background-color: #f3f4f6;
+            color: #374151;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            border: 1px solid #d1d5db;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 3.2rem;
+        }
+
+        .media-upload-buttons .cancel-btn:hover {
+            background-color: #e5e7eb;
+        }
+
+        .media-upload-buttons .upload-btn {
+            background-color: #2563eb;
+            color: #fff;
+            padding: 0.625rem 1.25rem;
+            border-radius: 0.375rem;
+            font-weight: 500;
+            border: 1px solid transparent;
+            cursor: pointer;
+            font-size: 1.1rem;
+            margin-top: 3.2rem;
+        }
+
+        .media-upload-buttons .upload-btn:hover {
+            background-color: #1e40af;
+        }
+
+        /* New styles for Leave History and Employee Balance content cards */
+        .content-card {
+            background-color: #fff;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+            margin-top: 2rem;
+            text-align: center;
+        }
+        .content-card h2 {
+            font-size: 1.875rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        .content-card p {
+            font-size: 1rem;
+            color: #4b5563;
+        }
+
+        /* <-------------------HR CSS------------------------> */
+        /* Summary Cards Styles */
+        .summary-cards-container {
+            display: grid;
+            grid-template-columns: repeat(1, minmax(0, 1fr)); /* Default to 1 column */
+            gap: 1.5rem; /* Gap between cards */
+            margin-bottom: 1.5rem;
+        }
+
+        @media (min-width: 768px) { /* md breakpoint */
+            .summary-cards-container {
+                grid-template-columns: repeat(3, minmax(0, 1fr)); /* 3 columns on medium screens and up */
+            }
+        }
+
+        .summary-card {
+            background-color: #fff; /* bg-white */
+            padding: 1.5rem; /* p-6 */
+            border-radius: 0.5rem; /* rounded-lg */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+            display: flex;
+            align-items: center;
+            gap: 1rem; /* space-x-4 */
+        }
+
+        .summary-card .icon-circle {
+            width: 3rem; /* w-12 */
+            height: 3rem; /* h-12 */
+            border-radius: 9999px; /* rounded-full */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #2563eb; /* default icon color */
+        }
+
+        .summary-card .icon-circle svg {
+            width: 1.5rem; /* w-6 */
+            height: 1.5rem; /* h-6 */
+        }
+
+        .summary-card .bg-blue-100 { background-color: #dbeafe; color: #2563eb; }
+        .summary-card .bg-yellow-100 { background-color: #fef9c3; color: #d97706; } /* Example yellow for pending */
+        .summary-card .bg-green-100 { background-color: #dcfce7; color: #16a34a; } /* Example green for requests */
+
+        .summary-card .info {
+            display: flex;
+            flex-direction: column;
+        }
+
+        .summary-card .value {
+            font-size: 1.5rem; /* text-2xl */
+            font-weight: 700; /* font-bold */
+            color: #1f2937; /* text-gray-800 */
+        }
+
+        .summary-card .label {
+            font-size: 0.875rem; /* text-sm */
+            color: #6b7280; /* text-gray-500 */
+        }
+
+        /* Search and Filter Section */
+        .search-filter-container {
+            display: flex;
+            gap: 1rem; /* space-x-4 */
+            align-items: center;
+            margin-bottom: 1.5rem; /* mb-6 */
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+        }
+
+        .search-input-wrapper {
+            position: relative;
+            flex-grow: 1;
+            min-width: 200px; /* Adjust as needed */
+        }
+
+        .search-input {
+            padding: 1rem 1rem 1rem 4rem;
+            border: 1px solid #d1d5db; /* border-gray-300 */
+            border-radius: 0.375rem; /* rounded-md */
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); /* shadow-sm */
+            outline: none;
+            font-size: 0.875rem;
+            color: #374151;
+            width: 100%;
+            box-sizing: border-box;
+            padding-left: 2rem;
+        }
+
+        .search-input:focus {
+            border-color: #3b82f6; /* focus:border-blue-500 */
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); /* focus:ring-blue-500 */
+        }
+
+        .search-input-wrapper svg {
+            position: absolute;
+            left: 0.75rem;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 1.25rem; /* w-5 */
+            height: 1.50rem; /* h-5 */
+            color: #9ca3af; /* text-gray-400 */
+            pointer-events: none;
+        }
+
+        .filter-button {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem; /* space-x-2 */
+            background-color: #eff6ff; /* bg-blue-50 */
+            color: #1d4ed8; /* text-blue-700 */
+            padding: 0.5rem 1rem; /* py-2 px-4 */
+            border-radius: 0.375rem; /* rounded-md */
+            border: 1px solid #93c5fd; /* border-blue-300 */
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 200ms, border-color 200ms;
+            /* Ensure the button doesn't shrink or grow unexpectedly */
+            flex-shrink: 0;
+        }
+
+        .filter-button:hover {
+            background-color: #dbeafe; /* hover:bg-blue-100 */
+            border-color: #60a5fa; /* hover:border-blue-400 */
+        }
+
+        .filter-button svg {
+            width: 1.25rem; /* w-5 */
+            height: 1.25rem; /* h-5 */
+        }
+
+        .reset-button {
+          display: flex;
+          align-items: center;
+          gap: 0.5rem; /* space-x-2 */
+          background-color: #fee2e2; /* bg-red-100 */
+          color: #dc2626; /* text-red-700 */
+          padding: 0.5rem 1rem; /* py-2 px-4 */
+          border-radius: 0.375rem; /* rounded-md */
+          border: 1px solid #fca5a5; /* border-blue-300 */
+          cursor: pointer;
+          font-weight: 500;
+          transition: background-color 200ms, border-color 200ms;
+          flex-shrink: 0;
+      }
+
+      .reset-button svg {
+          width: 1.25rem; /* w-5 */
+          height: 1.25rem;
+          fill: currentColor; /* Makes the SVG icon inherit the text color (white) */
+      }
+
+      /* Hover effect */
+      .reset-button:hover {
+          background-color: #fbd6d6; /* Lighter red for rejected on hover */
+            color: #b31f1f;
+        }
+
+      /* Table Styles */
+      .table-container {
+          background-color: #fff; /* bg-white */
+          border-radius: 0.5rem; /* rounded-lg */
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+          overflow-x: auto; /* Enable horizontal scrolling for tables on small screens */
+          /* Add the following to fix table resizing */
+          min-height: 600px; /* Or a suitable height based on your design */
+          max-height: 600px; /* Optional: If you want to limit the maximum height */
+          overflow-y: auto; /* Enable vertical scrolling if content exceeds max-height */
+          contain: layout size; /* This is a powerful property for isolation */
+          display: block; /* Ensure it behaves as a block element for min/max height to work reliably */
+      }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.80rem;
+            color: #374151;
+        }
+
+        .data-table thead th {
+            padding: 0.75rem 1rem;
+            background-color: #1d4ed8;
+            color: #fff;
+            text-align: center;
+            font-weight: 600;
+            border-bottom: 1px solid #e5e7eb;
+            cursor: pointer;
+            white-space: nowrap;
+            position: sticky; /* Make the header sticky */
+            top: 0; /* Stick to the top of its scrollable container */
+            z-index: 10;
+        }
+
+        /* No sorting for Status column, so remove cursor */
+        .data-table thead th[data-column="status"] {
+            cursor: default;
+        }
+
+        .data-table tbody td {
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid #e5e7eb;
+            vertical-align: middle; /* Align content nicely */
+            white-space: nowrap; /* Prevent wrapping in cells */
+        }
+
+        .data-table tbody tr:last-child td {
+            border-bottom: none; /* No border for the last row */
+        }
+
+        .data-table tbody tr:nth-child(odd) {
+            background-color: #F7F6FE; /* Even row background */
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f3f4f6; /* Hover effect for rows */
+        }
+
+        /* Status Badges - Base Colors */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center; /* Center content horizontally */
+            padding: 0.25rem 0.75rem; /* px-3 py-1 */
+            border-radius: 9999px; /* rounded-full */
+            font-size: 0.75rem; /* text-xs */
+            font-weight: 600; /* font-semibold */
+            text-transform: capitalize;
+            min-width: 60px; /* Ensure a minimum width for visibility */
+            /* Stronger fallback style for status badge to ensure visibility */
+            background-color: #d1d5db; /* bg-gray-300 */
+            color: #374151; /* text-gray-700 */
+            border: 1px solid #9ca3af; /* Add a subtle border */
+        }
+
+        .status-approved, /* Added for direct mapping of 'Approved' */
+        .status-accepted {
+            background-color: #dcfce7; /* bg-green-100 */
+            color: #16a34a; /* text-green-700 */
+            border-color: #86efac; /* Lighter green border */
+        }
+        .status-pending {
+            background-color: #fef9c3; /* bg-yellow-100 */
+            color: #d97706; /* text-yellow-700 */
+            border-color: #fde68a; /* Lighter yellow border */
+        }
+        .status-rejected {
+            background-color: #fee2e2; /* bg-red-100 */
+            color: #dc2626; /* text-red-700 */
+            border-color: #fca5a5; /* Lighter red border */
+        }
+        .status-canceled {
+            background-color: #e5e7eb; /* bg-gray-200 */
+            color: #6b7280; /* text-gray-500 */
+            border-color: #9ca3af; /* Gray border */
+        }
+
+        /* Table name cell with image */
+        .name-cell {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem; /* space-x-2 */
+        }
+
+        .name-cell .avatar {
+            width: 1.5rem; /* w-6 */
+            height: 1.5rem; /* h-6 */
+            border-radius: 9999px; /* rounded-full */
+            object-fit: cover;
+        }
+
+        /* Sorting icons */
+        .sort-icon {
+            display: inline-block;
+            width: 0.8rem;
+            height: 0.8rem;
+            margin-left: 0.5rem;
+            vertical-align: middle;
+            background-repeat: no-repeat;
+            background-position: center;
+            background-size: contain;
+            opacity: 0.4; /* Slightly faded when not active */
+        }
+
+        .sort-icon::before {
+            content: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"%3E%3Cpath fill-rule="evenodd" d="M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" /%3E%3C/svg%3E'); /* Up arrow */
+            display: inline-block;
+            width: 100%;
+            height: 100%;
+            filter: invert(100%);
+        }
+
+        .sort-icon.asc::before {
+            content: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"%3E%3Cpath fill-rule="evenodd" d="M11.47 7.72a.75.75 0 0 1 1.06 0l7.5 7.5a.75.75 0 1 1-1.06 1.06L12 9.31l-6.97 6.97a.75.75 0 0 1-1.06-1.06l7.5-7.5Z" clip-rule="evenodd" /%3E%3C/svg%3E'); /* Up arrow */
+            opacity: 1;
+            filter: invert(100%);
+        }
+
+        .sort-icon.desc::before {
+            content: url('data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" class="w-6 h-6"%3E%3Cpath fill-rule="evenodd" d="M12.53 16.28a.75.75 0 0 1-1.06 0l-7.5-7.5a.75.75 0 0 1 1.06-1.06L12 14.69l6.97-6.97a.75.75 0 1 1 1.06 1.06l-7.5 7.5Z" clip-rule="evenodd" /%3E%3C/svg%3E'); /* Down arrow */
+            opacity: 1;
+            filter: invert(100%);
+        }
+
+        /* New styles for status dropdown */
+        .status-dropdown-container {
+            position: relative;
+            display: inline-block;
+            cursor: pointer;
+        }
+
+        .status-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #ffffff; 
+            min-width: 120px;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 100; 
+            border-radius: 0.375rem;
+            overflow: hidden;
+            top: 100%; 
+            left: 0;
+            margin-top: 0.5rem;
+            border: 1px solid #d1d5db; 
+        }
+
+        .status-dropdown-content span, .filter-dropdown-content span {
+            color: #374151; /* Changed to a standard text color */
+            padding: 8px 12px;
+            text-decoration: none;
+            display: block;
+            text-transform: capitalize;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+                /* Hover states for individual status options within the dropdown */
+        .status-dropdown-content span.status-option[data-status="Approved"]:hover, /* Updated to "Approved" */
+        .filter-dropdown-content span.filter-option[data-value="approved"]:hover {
+            background-color: #c8f2d5; /* Lighter green for accepted on hover */
+            color: #107f35; /* Optionally make text slightly darker on hover */
+        }
+
+        .status-dropdown-content span.status-option[data-status="Rejected"]:hover,
+        .filter-dropdown-content span.filter-option[data-value="rejected"]:hover {
+            background-color: #fbd6d6; /* Lighter red for rejected on hover */
+            color: #b31f1f;
+        }
+
+        .status-dropdown-content span.status-option[data-status="Pending"]:hover,
+        .filter-dropdown-content span.filter-option[data-value="pending"]:hover {
+            background-color: #fcf6b3; /* Lighter yellow for pending on hover */
+            color: #a65e04;
+        }
+
+        .status-dropdown-content span.status-option[data-status="Cancelled"]:hover,
+        .filter-dropdown-content span.filter-option[data-value="canceled"]:hover {
+            background-color: #d1d5db; /* Lighter gray for cancelled on hover */
+            color: #555c65;
+        }
+
+        /* If you have "delivered" and "process" in your dropdown, add them too */
+        .status-dropdown-content span.status-option[data-status="delivered"]:hover {
+            background-color: #b3e6ff; /* Lighter sky blue for delivered on hover */
+            color: #006bb0;
+        }
+
+        .status-dropdown-content span.status-option[data-status="process"]:hover {
+            background-color: #b3e6ff; /* Lighter blue for process on hover */
+            color: #1e4bb2;
+        }
+
+        .status-dropdown-container.active .status-dropdown-content {
+            display: block;
+        }
+
+        /* Styles for the new filter options popover */
+      .filter-options-popover {
+        display: none; /* Hidden by default */
+        position: absolute;
+        background-color: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: 0.375rem;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        padding: 1rem;
+        z-index: 5000; 
+        right: 0;
+        margin-right: 1rem;
+        top: calc(40% + 0.5rem); 
+        min-width: 200px;
+        flex-direction: column;
+        gap: 0.75rem;
+}
+
+        .filter-options-popover.active {
+            display: flex; /* Show when active */
+        }
+
+        .filter-group label {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+            color: #4b5563;
+        }
+
+        /* Styles for the new custom filter dropdowns */
+        .filter-dropdown-container {
+            position: relative;
+            width: 200px; /* adjust */
+            cursor: pointer;
+            border: 1px solid #d1d5db;
+            border-radius: 0.375rem;
+            background-color: #fff;
+            padding: 0.5rem 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.875rem;
+            color: #374151;
+            box-sizing: border-box;
+            transition: border-color 200ms, box-shadow 200ms;
+        }
+        .filter-selected-value {
+            display: inline-block;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            flex: 1; /* allow to take available space */
+        }
+        .filter-dropdown-container:focus-within {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5);
+        }
+
+        .filter-dropdown-container .arrow-icon {
+            width: 1rem;
+            height: 1rem;
+            margin-left: 0.5rem;
+            transition: transform 200ms;
+        }
+
+        .filter-dropdown-container.active .arrow-icon {
+            transform: rotate(180deg);
+        }
+
+        .filter-dropdown-content {
+            display: none;
+            position: absolute;
+            background-color: #fff;
+            min-width: 100%;
+            box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+            z-index: 2000;
+            border-radius: 0.375rem;
+            overflow: hidden;
+            top: calc(100% + 0.25rem); /* Position below the selected value */
+            left: 0;
+            border: 1px solid #d1d5db;
+        }
+
+        .filter-dropdown-container.active .filter-dropdown-content {
+            display: block;
+        }
+
+        .filter-dropdown-content span.filter-option {
+            padding: 8px 12px;
+            text-decoration: none;
+            display: block;
+            color: #374151;
+            cursor: pointer;
+        }
+
+        .filter-dropdown-content span.filter-option:hover {
+            background-color: #f3f4f6;
+        }
+        .filter-dropdown-content span.filter-option[data-value=""] {
+            font-style: italic; /* Style for 'All' option */
+            color: #6b7280;
+        }
+
+
+        .apply-filters-button {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background-color: #2563eb; /* bg-blue-600 */
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 0.375rem;
+            border: none;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background-color 200ms;
+            margin-top: 0.5rem;
+        }
+
+        .apply-filters-button:hover {
+            background-color: #1d4ed8; /* hover:bg-blue-700 */
+        }
+
+        /* Adjust search-filter-container to accommodate the popover positioning */
+        .search-filter-container {
+            position: relative; /* Important for positioning the popover */
+            display: flex;
+            gap: 0.5rem;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+
+        /* Employee Balance specific styles (now table-based) */
+        /* Reusing .table-container and .data-table styles for consistency */
+
+        /* Top Date Display */
+        .date-display-container {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end; /* Align to the right */
+            margin-bottom: 1.5rem;
+            font-size: 1.275rem; /* text-lg */
+            font-weight: 500; /* font-medium */
+            color: #1d4ed8; /* text-blue-700 */
+            display: none; /* Hidden by default */
+        }
+
+        .date-display-container .name{
+            justify-content: flex-start; /* Align to the lrft */
+            margin-right: auto;
+            font-weight: 750;
+            font-size: 2rem;
+        }
+
+        .date-display-container.active {
+            display: flex; /* Shown when active */
+        }
+
+        .date-display-container .weather-icon {
+            margin-right: 0.5rem;
+            font-size: 2.25rem; /* Adjust emoji size */
+        }
+
+        .footer-section {
+          display: flex;
+          flex-direction: column;
+          background-color: var(--secondary-blue);
+          align-items: center;
+          min-height: 5rem;
+          margin-top: 1rem;
+          padding: 0.3rem;
+          border-radius: 0.5rem;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+          background-color: #eff6ff;
+      }
+
+      .footer-details {
+          text-align: center;
+          justify-content: center;
+          margin-top: 0.75rem;
+          color: #374151;
+      }
+
+      .footer-details a {
+        text-decoration: none;
+        color: var(--text-dark);
+        transition: background-color 200ms, color 200ms;
+      }
+
+      .footer-details a:visited {
+        text-decoration: none;
+        color: var(--text-dark);
+      }
+
+      .footer-details a:hover {
+        text-decoration: none;
+        color: var(--primary-blue);
+        font-weight: 500;
+      }
+
+      
+      #forceLeaveCard {
+          min-height: 800px; /* Adjust this value as needed to set your desired minimum height */
+          /* You can also use percentage or viewport units like min-height: 80vh; */
+      }
+
+      #forceLeaveDate {
+          font-size: 1.2rem;
+          margin-bottom: 1rem;
+          padding: 0.5rem;
+          border-radius: 0.25rem;
+          text-align: right;
+      }
+
+      button: focus, 
+      .btn:focus {
+          outline: none;
+      }
+      .btn {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          border-radius: 0.375rem;
+          font-weight: 500;
+          transition: background-color 0.2s ease-in-out;
+          border: none; 
+          font-size: 1.1rem;
+          
+      }
+      .force-leave-buttons {
+          display: flex; /* Makes the container a flex container */
+          gap: 1rem; /* Adds space between the buttons */
+          justify-content: flex-end; /* Aligns items (buttons) to the end of the flex container (right side) */
+          padding-top: 1rem;
+          border-top: 1px solid #e2e8f0;
+          margin-top: 2rem;
+      }
+
+      .btn-primary {
+          background-color: #2563EB; 
+          color: #fff;
+          padding: 0.75rem 1.5rem;
+          
+      }
+      .btn-secondary {
+          background-color: #FF0000; 
+          color: #fff;
+          padding: 0.75rem 1.5rem;
+      }
+      .btn-primary:hover {
+          background-color: #1e40af; 
+          padding: 0.75rem 1.5rem;
+      }
+      .btn-secondary:hover {
+          background-color: #B22222; 
+          padding: 0.75rem 1.5rem;
+      }
+
+      .form-row {
+          display: flex; /* Makes the container a flexbox */
+          gap: 1.5rem; /* Adjust space between side-by-side form groups */
+          margin-bottom: 1rem; /* Adds space below each row of fields */
+          flex-wrap: wrap; /* Allows items to wrap to the next line on smaller screens */
+      }
+
+      .form-row .form-group {
+          flex: 1; /* This makes each form-group take up equal available space within the row */
+          min-width: 150px; /* Optional: ensures fields don't get too small on very narrow screens */
+          margin-bottom: 0; /* Remove default bottom margin from form-group when in a row */
+      }
+
+      /* Ensure inputs/selects within form-row fill their group's width */
+      .form-row .form-input {
+          width: 100%;
+      }
+
+      .required-asterisk {
+          color: #ef4444; /* A vibrant red color */
+          margin-left: 0.25rem; /* Adds a small space between the label text and the asterisk */
+      }
+
+      .form-actions {
+          display: flex; /* Makes the container a flexbox */
+          justify-content: flex-end; /* Aligns items (the button) to the end (right side) of the flex container */
+          /* The mt-4 class you already added handles the top margin */
+      }
+      .btn .fas,
+      .btn .far,
+      .btn .fab { /* Targets solid, regular, and brand Font Awesome icons within any element with the .btn class */
+          margin-right: 0.5rem; /* Adjust this value as needed for your desired spacing */
+      }
+
+      /* Force Leave Modal Specific Styles */
+.close-modal-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    color: #6b7280; /* Matches your --text-light equivalent */
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.close-modal-btn:hover {
+    color: #1f2937; /* Matches --text-dark for hover */
+}
+
+.error-message {
+    font-size: 0.875rem; /* Matches your text-sm */
+    color: var(--error-red); /* Uses #E74C3C from your :root */
+    margin-top: 5px;
+    min-height: 1.2em; /* Ensures layout stability */
+}
+
+.modal-content h2 {
+    margin-top: 0;
+    font-size: 1.5rem; /* Matches your main-content-card h1 size */
+    font-weight: 600; /* Matches your form legend */
+    color: #1f2937; /* Matches --text-dark */
+    margin-bottom: 1.7rem; /* Consistent spacing */
+}
+
+/* Optional: Ensure modal-overlay works with JavaScript display toggle */
+.modal-overlay {
+    display: none; /* Override visibility: hidden to work with JS */
+    opacity: 1; /* Remove opacity transition to avoid conflict */
+    visibility: visible; /* Remove visibility transition */
+}
+.modal-overlay.show {
+    display: flex; /* Match JavaScript's style.display = 'flex' */
+}
+/* Force Leave Modal Content Styles */
+.force-leave-modal-content {
+    max-width: 800px;
+    width: 95%; /* Adjust for smaller screens */
+    max-height: 90vh; /* Limit height to viewport height */
+    padding: 1.5rem;
+    background-color: #fff;
+    border-radius: 0.5rem; /* This line rounds the corners */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+    text-align: left;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto; /* Enable scrolling for modal content if it overflows */
+}
+
+/* Adjust form group spacing for larger modal */
+.force-leave-modal-content .form-group {
+    margin-bottom: 1.25rem; /* Slightly tighter than 1.5rem */
+}
+
+/* Adjust input and select padding for readability */
+.force-leave-modal-content input[type="text"],
+.force-leave-modal-content select {
+    padding: 0.75rem;
+    font-size: 1rem;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.force-leave-modal-content form {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Adjust button spacing and size */
+.force-leave-modal-content .modal-actions {
+    display: flex;
+    justify-content: flex-end; /* Align buttons to the right */
+    gap: 1.25rem;
+    margin-top: auto; /* Keep buttons at the bottom */
+}
+
+.force-leave-modal-content .modal-button {
+    padding: 0.75rem 1.5rem; /* Larger buttons */
+    font-size: 1rem;
+}
+
+/* Ensure close button and header align with new modal size */
+.force-leave-modal-content .close-modal-btn {
+    position: absolute;
+    top: 10px;
+    right: 15px;
+    font-size: 24px;
+    color: #6b7280;
+    cursor: pointer;
+    transition: color 0.2s ease;
+}
+
+.force-leave-modal-content .close-modal-btn:hover {
+    color: #1f2937;
+}
+
+.force-leave-modal-content h2 {
+    margin-top: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+    color: #1f2937;
+    margin-bottom: 20px;
+}
+datalist {
+    font-family: 'Inter', sans-serif;
+}
+.data-table tr.selected {
+            background-color: #e0f2fe;
+            cursor: pointer;
+}
+
+/* NEW: Style for checkbox column */
+.data-table input[type="checkbox"] {
+    width: 16px;
+    height: 16px;
+    vertical-align: middle;
+    cursor: pointer;
+    accent-color: #2563eb;
+}
+
+.data-table.force-leave-names-table th {
+    text-align: left; /* NEW: Align headers left to match table data */
+}
+
+#confirmedForceLeaveNamesTable tbody:empty::after {
+    /*content: "No employees added"; */
+    display: block;
+    text-align: left; /* Match preview table headers */
+    padding: 0.75rem; /* Match .data-table td */
+    color: #6b7280; /* Gray, consistent with UI */
+    font-size: 0.875rem; /* Match .data-table td */
+    position: absolute;
+    top: 2.5rem; /* Below headers, fits 250px min-height */
+}
+
+.autocomplete-dropdown {
+    position: relative;
+    top: 100%; /* Below input */
+    left: 0;
+    width: 100%; /* Match input width */
+    max-height: 200px; /* Scrollable height */
+    overflow-y: auto;
+    background: white;
+    border: 1px solid #ced4da; /* Match .form-control border */
+    border-radius: 0.25rem; /* Match .form-control border-radius */
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    z-index: 1000; /* Above other elements */
+    display: none; /* Hidden by default */
+    
+}
+.autocomplete-dropdown .autocomplete-item {
+    padding: 0.375rem 0.75rem; /* Match .form-control padding */
+    font-size: 1rem; /* Match .form-control or .data-table td */
+    color: #000000; /* Dark text, match .form-control */
+    cursor: pointer;
+}
+.autocomplete-dropdown .autocomplete-item:hover {
+    background: #ADD8E6; /* Light gray hover, match Bootstrap bg-light */
+}
+.autocomplete-dropdown .no-results {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.875rem;
+    color: #6c757d; /* Gray, match Bootstrap text-muted */
+}
+
+//Force Leave History:
+
+.btn-history {
+          background-color: #00A86B; 
+          color: #fff;
+          padding: 0.75rem 1.2rem;
+          margin-bottom: 20px;
+          
+}
+
+.btn-history:hover {
+          background-color: #2E6F40; 
+          padding: 0.75rem 1.5rem;
+}
+
+.force-leave-history-modal-content {
+    background-color: #fff; /* Solid white background */
+    padding: 2rem; /* Adds space around the content */
+    border-radius: 0.5rem; /* Rounds the corners of the modal */
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* Adds a subtle shadow */
+    max-width: 1000px; /* Sets a maximum width for the modal */
+    width: 95%; /* Make the modal responsive, taking 95% of viewport width */
+    max-height: 90vh; /* Limit height to 90% of viewport height */
+    display: flex; /* Use flexbox for internal layout */
+    flex-direction: column; /* Stack children vertically */
+    position: relative; /* Ensures proper positioning of child elements like the close button */
+    overflow-y: auto; /* Enable scrolling for modal content if it overflows */
+    overflow-x: hidden; /* NEW: Hide horizontal overflow to ensure border-radius is visible */
+}
+
+.force-leave-history-modal-content h2 {
+    text-align: center;
+    margin-top: 0; /* Optional: Adjust top margin if needed */
+    margin-bottom: 20px; /* Optional: Add some space below the heading */
+    color: #1d4ed8;
+    font-weight: 700;
+}
+
+/* stylecss.html */
+
+/* Adjust the width of the table itself */
+#forceLeaveHistoryTable {
+    width: 90%; /* Example: make the table 90% width of its container */
+    max-width: 850px; /* Example: ensure it doesn't get too wide */
+    /* Add other table-specific styles here, e.g., border-collapse, font-size */
+    font-size: 0.9em; /* Smaller font size for this table */
+    padding-top: 20px;
+    
+}
+
+/* Adjust properties of table cells (th, td) for this specific table */
+#forceLeaveHistoryTable th,
+#forceLeaveHistoryTable td {
+    padding: 8px 12px; /* Example: adjust padding */
+    white-space: nowrap; /* Prevent text wrapping in cells if desired */
+    overflow: hidden;
+    text-overflow: ellipsis; /* Add ellipsis for overflow */
+}
+
+/* Adjust the wrapper for scrolling if needed */
+#forceLeaveHistoryModal .table-scroll-wrapper {
+    max-height: 300px; /* Example: set a max height for scrolling within the modal */
+    min-height: 600px;
+    overflow-y: auto; /* Enable vertical scrolling */
+}
+
+#forceLeaveHistoryModal .filter-controls-container {
+    /* Add or adjust this property */
+    margin-bottom: 20px; /* Adjust '20px' to your desired spacing */
+
+    /* You might also want to ensure other general styles for this container are here,
+       e.g., if you added display: flex, etc., in previous steps. */
+    /* Example of other styles you might have: */
+    /* display: flex; */
+    /* align-items: center; */
+    /* justify-content: center; */
+    /* gap: 10px; */
+}
+
+/* Basic spinner styles */
+/* Basic styles for the loading spinner container */
+.loading-spinner-container {
+    position: absolute; /* Make it an overlay */
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background-color: rgba(255, 255, 255, 0.9); /* Semi-transparent white background */
+    z-index: 999; /* Ensure it's on top of other modal content */
+    border-radius: 8px; /* Match modal content border-radius */
+    /* Remove padding: 30px; from here as it's now an overlay */
+    padding: 20px; /* Keep some internal padding for spinner/text */
+    color: #555;
+    font-size: 1.1em;
+}
+
+/* Spinner animation */
+.spinner {
+     border: 4px solid rgba(0, 0, 0, 0.1);
+    border-left-color: #007bff; /* Primary color for the spinning part */
+    border-radius: 50%;
+    width: 40px;
+    height: 40px;
+    animation: spin 1s linear infinite;
+    margin-bottom: 10px;
+}
+.table-scroll-wrapper {
+            overflow-x: auto;
+            max-height: 250px; /* NEW: Set fixed height for scrollable area */
+            min-height: 250px;
+            overflow-y: auto; /* NEW: Enable vertical scrollbar */
+        }
+
+/* In stylecss.txt */
+
+/* Specific styles for the confirmation modal content */
+.confirmation-modal-content {
+    max-width: 400px; /* Make it smaller than other modals */
+    padding: 25px; /* Adjust padding as needed */
+    text-align: center; /* Center the message */
+    /* Ensure it doesn't try to flex-grow unless intended */
+    display: flex; /* Using flexbox for vertical alignment */
+    flex-direction: column; /* Stack message and buttons */
+    align-items: center; /* Center items horizontally */
+    gap: 20px; /* Space between message and buttons */
+}
+
+.confirmation-message {
+    font-size: 1.1rem;
+    color: #333;
+    line-height: 1.5;
+    margin-bottom: 0; /* No bottom margin, as gap will handle spacing */
+}
+
+.confirmation-actions {
+    display: flex;
+    justify-content: center; /* Center buttons */
+    gap: 15px; /* Space between Yes/No buttons */
+    width: 100%; /* Ensure buttons span available width */
+}
+
+/* Reusing .modal-button styles, but ensure they are appropriately sized for confirmations */
+.modal-button.apply,
+.modal-button.cancel {
+    padding: 8px 18px; /* Slightly smaller padding for confirmation buttons */
+    font-size: 0.95rem;
+}
+
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+    </style>
